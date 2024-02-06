@@ -1,0 +1,2 @@
+[*.cs]
+dotnet_diagnostic.CA5394.severity = none # Do not use insecure randomness
