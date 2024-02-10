@@ -12,12 +12,13 @@ internal static class Program
     {
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         Random.Shared.Shuffle(cards);
+        const int columnCount = 4;
         for (int i = 0; i < cards.Length; ++i)
         {
-            (int quotient, int remainder) = Math.DivRem(i, 4);
-            if (remainder is 0)
+            (int rowIndex, int columnIndex) = Math.DivRem(i, columnCount);
+            if (columnIndex is 0)
             {
-                if (quotient > 0)
+                if (rowIndex > 0)
                     Console.WriteLine();
             }
             else
