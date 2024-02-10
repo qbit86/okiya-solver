@@ -27,5 +27,13 @@ public sealed class Solver
         Negamax(rootNode, 1, ImmutableStack<MoveEvalPair>.Empty, out moveEvaluationStack);
 
     private double Negamax(Node node, int sideToMove, ImmutableStack<MoveEvalPair> inputStack,
-        out ImmutableStack<MoveEvalPair> outputStack) => throw new NotImplementedException();
+        out ImmutableStack<MoveEvalPair> outputStack)
+    {
+        if (IsTerminalNode(node, out double evaluation))
+            throw new NotImplementedException();
+
+        throw new NotImplementedException();
+    }
+
+    private bool IsTerminalNode(Node node, out double evaluation) => throw new NotImplementedException();
 }
