@@ -10,26 +10,25 @@ internal static class Program
 
     private static void Main()
     {
+        Random random = new(1729);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
-        Random.Shared.Shuffle(cards);
+        random.Shuffle(cards);
         const int columnCount = 4;
-        for (int i = 0; i < cards.Length; ++i)
+        int rowCount = (cards.Length + columnCount - 1) / columnCount;
+        for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
         {
-            (int rowIndex, int columnIndex) = Math.DivRem(i, columnCount);
-            if (columnIndex is 0)
+            if (rowIndex > 0)
+                Console.WriteLine();
+            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex, ++cardIndex)
             {
-                if (rowIndex > 0)
-                    Console.WriteLine();
-            }
-            else
-            {
-                Console.Write(' ');
-            }
+                if (columnIndex > 0)
+                    Console.Write(' ');
 
-            int card = cards[i];
-            string s = Int32CardConcept.Instance.ToString(card);
-            ConsoleColor foregroundColor = s_suitColors[Int32CardConcept.Instance.Suit(card)];
-            Write(s, foregroundColor);
+                int card = cards[cardIndex];
+                string s = Int32CardConcept.Instance.ToString(card);
+                ConsoleColor foregroundColor = s_suitColors[Int32CardConcept.Instance.Suit(card)];
+                Write(s, foregroundColor);
+            }
         }
 
         Console.WriteLine();
