@@ -1,6 +1,6 @@
 namespace Okiya;
 
-public interface ICardConcept<in TCard>
+public interface IContravariantCardConcept<in TCard>
 {
     public string ToString(TCard card);
 

@@ -13,9 +13,14 @@ public sealed class Int32CardConcept : ICardConcept<int>
 
     public string ToString(int card) => s_cardStrings[card & Constants.Log2CardCountMask];
 
-    public int Suit(int card) => (card >> Constants.Log2RankCount) & Constants.Log2SuitCountMask;
+    public int Suit(int card) => card >> Constants.Log2RankCount;
 
     public int Rank(int card) => card & Constants.Log2RankCountMask;
+
+    public int Card(int suit, int rank) => CreateCard(suit, rank);
+
+    private static int CreateCard(int suit, int rank) =>
+        (suit << Constants.Log2RankCount) | (rank & Constants.Log2RankCountMask);
 
     private static string[] CreateCardStrings()
     {
@@ -27,7 +32,7 @@ public sealed class Int32CardConcept : ICardConcept<int>
             {
                 buffer[0] = Ranks[rank];
                 buffer[1] = Suits[suit];
-                int card = (suit << 2) + rank;
+                int card = CreateCard(suit, rank);
                 result[card] = new(buffer);
             }
         }
