@@ -21,9 +21,9 @@ public sealed class Int32CardConcept : ICardConcept<int>
     {
         string[] result = new string[Constants.CardCount];
         Span<char> buffer = stackalloc char[2];
-        for (int suit = 0; suit < 4; ++suit)
+        for (int suit = 0; suit < Constants.SuitCount; ++suit)
         {
-            for (int rank = 0; rank < 4; ++rank)
+            for (int rank = 0; rank < Constants.RankCount; ++rank)
             {
                 buffer[0] = Ranks[rank];
                 buffer[1] = Suits[suit];
