@@ -11,7 +11,7 @@ public sealed class Int32CardConcept : ICardConcept<int>
 
     public static Int32CardConcept Instance { get; } = new();
 
-    public string ToString(int card) => s_cardStrings[card & 0b1111];
+    public string ToString(int card) => s_cardStrings[card & Constants.Log2CardCountMask];
 
     public int Suit(int card) => (card >> 2) & 0b11;
 
@@ -19,7 +19,7 @@ public sealed class Int32CardConcept : ICardConcept<int>
 
     private static string[] CreateCardStrings()
     {
-        string[] result = new string[16];
+        string[] result = new string[Constants.CardCount];
         Span<char> buffer = stackalloc char[2];
         for (int suit = 0; suit < 4; ++suit)
         {

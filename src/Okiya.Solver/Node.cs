@@ -24,7 +24,7 @@ internal readonly record struct Node
 
     internal int GetMaxPlayerTokenBits() => unchecked((int)(_playersTokenBits & 0xFFFF));
 
-    internal int GetMinPlayerTokenBits() => unchecked((int)(_playersTokenBits >> 16));
+    internal int GetMinPlayerTokenBits() => unchecked((int)(_playersTokenBits >> Constants.CardCount));
 
     internal int GetCardOrDefault() => _card;
 
@@ -44,7 +44,7 @@ internal readonly record struct Node
     internal Node AddMinPlayerToken(int offset, int card)
     {
         uint playerTokenMask = 1u << offset;
-        uint playersTokenBits = _playersTokenBits | (playerTokenMask << 16);
+        uint playersTokenBits = _playersTokenBits | (playerTokenMask << Constants.CardCount);
         return new(playersTokenBits, card);
     }
 }

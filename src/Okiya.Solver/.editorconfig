@@ -1,0 +1,2 @@
+[Constants.cs]
+dotnet_diagnostic.CA1508.severity = none # Avoid dead conditional code
