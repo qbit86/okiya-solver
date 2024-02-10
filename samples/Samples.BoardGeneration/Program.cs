@@ -23,7 +23,6 @@ internal static class Program
             {
                 if (columnIndex > 0)
                     Console.Write(' ');
-
                 int card = cards[cardIndex];
                 string s = Int32CardConcept.Instance.ToString(card);
                 ConsoleColor foregroundColor = s_suitColors[Int32CardConcept.Instance.Suit(card)];
