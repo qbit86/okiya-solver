@@ -1,3 +1,3 @@
 namespace Okiya;
 
-public interface ICardConcept<TCard> : IContravariantCardConcept<TCard>, ICovariantCardConcept<TCard> { }
+public interface ICardConcept<TCard> : IContravariantCardConcept<TCard>, ICovariantCardConcept<TCard>;
