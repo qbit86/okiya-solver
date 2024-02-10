@@ -13,9 +13,9 @@ public sealed class Int32CardConcept : ICardConcept<int>
 
     public string ToString(int card) => s_cardStrings[card & Constants.Log2CardCountMask];
 
-    public int Suit(int card) => (card >> 2) & 0b11;
+    public int Suit(int card) => (card >> Constants.Log2RankCount) & Constants.Log2SuitCountMask;
 
-    public int Rank(int card) => card & 0b11;
+    public int Rank(int card) => card & Constants.Log2RankCountMask;
 
     private static string[] CreateCardStrings()
     {
