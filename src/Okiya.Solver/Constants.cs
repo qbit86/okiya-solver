@@ -1,5 +1,6 @@
 #if DEBUG
 using System.Diagnostics;
+using System.Numerics;
 #endif
 
 namespace Okiya;
@@ -27,14 +28,22 @@ public static class Constants
 #if DEBUG
     static Constants()
     {
+        Debug.Assert(CardCount > 0);
         Debug.Assert(CardBitCount > 0);
-        Debug.Assert(1 << CardBitCount >= CardCount);
-        Debug.Assert((1 << CardBitCount) - 1 is CardMask);
+        Debug.Assert(BitOperations.Log2(CardCount) + 1 is CardBitCount);
+        Debug.Assert(1 << CardBitCount is CardMask + 1);
+
+        Debug.Assert(SuitCount > 0);
+        Debug.Assert(SuitBitCount > 0);
+        Debug.Assert(BitOperations.Log2(SuitCount) + 1 is SuitBitCount);
+        Debug.Assert(1 << SuitBitCount is SuitMask + 1);
+
+        Debug.Assert(RankCount > 0);
+        Debug.Assert(RankBitCount > 0);
+        Debug.Assert(BitOperations.Log2(RankCount) + 1 is RankBitCount);
+        Debug.Assert(1 << RankBitCount is RankMask + 1);
+
         Debug.Assert(SuitCount * RankCount is CardCount);
-        Debug.Assert(1 << SuitBitCount >= SuitCount);
-        Debug.Assert((1 << SuitBitCount) - 1 is SuitMask);
-        Debug.Assert(1 << RankBitCount >= RankCount);
-        Debug.Assert((1 << RankBitCount) - 1 is RankMask);
     }
 #endif
 }
