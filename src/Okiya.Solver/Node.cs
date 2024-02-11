@@ -45,11 +45,15 @@ internal readonly record struct Node
         return true;
     }
 
-    internal int GetMaxPlayerTokens() => unchecked((int)(_playersTokens & PlayerTokensMask));
+    internal int GetPlayerTokens() => GetPlayerTokens(GetSideToMove());
 
-    internal int GetMinPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
+    private int GetPlayerTokens(int sideToMove) => sideToMove is 0 ? GetMaxPlayerTokens() : GetMinPlayerTokens();
 
-    internal int GetCardOrDefault() => unchecked((int)(_cardAndSideToMove & CardMask));
+    private int GetMaxPlayerTokens() => unchecked((int)(_playersTokens & PlayerTokensMask));
+
+    private int GetMinPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
+
+    private int GetCardOrDefault() => unchecked((int)(_cardAndSideToMove & CardMask));
 
     internal bool TryGetCard(out int card)
     {
@@ -57,7 +61,14 @@ internal readonly record struct Node
         return _playersTokens is not 0u;
     }
 
-    internal int GetSideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
+    private int GetSideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
+
+    internal (int SideToMove, int PlayerTokens) GetSideToMoveAndPlayerTokens()
+    {
+        int sideToMove = GetSideToMove();
+        int playerTokens = GetPlayerTokens(sideToMove);
+        return (sideToMove, playerTokens);
+    }
 
     internal Node AddPlayerToken(int index, int card) =>
         GetSideToMove() is 0 ? AddMaxPlayerToken(index, card) : AddMinPlayerToken(index, card);
