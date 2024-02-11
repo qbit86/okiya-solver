@@ -5,20 +5,23 @@ namespace Okiya;
 
 internal readonly record struct Node
 {
-    private readonly int _card;
+    private const uint CardMask = ~(1u << 31);
+
+    private readonly uint _cardAndSideToMove;
     private readonly uint _playersTokenBits;
 
-    private Node(uint playersTokenBits, int card)
+    private Node(uint playersTokenBits, uint cardAndSideToMove)
     {
         _playersTokenBits = playersTokenBits;
-        _card = card;
+        _cardAndSideToMove = cardAndSideToMove;
     }
 
     private bool PrintMembers(StringBuilder builder)
     {
         CultureInfo p = CultureInfo.InvariantCulture;
         builder.Append(p, $"Players = {GetMinPlayerTokenBits():b16}|{GetMaxPlayerTokenBits():b16}");
-        builder.Append(p, $", Card = {_card} ({Int32CardConcept.Instance.ToString(_card)})");
+        int card = GetCardOrDefault();
+        builder.Append(p, $", Card = {card} ({Int32CardConcept.Instance.ToString(card)})");
         return true;
     }
 
@@ -26,25 +29,29 @@ internal readonly record struct Node
 
     internal int GetMinPlayerTokenBits() => unchecked((int)(_playersTokenBits >> Constants.CardCount));
 
-    internal int GetCardOrDefault() => _card;
+    internal int GetCardOrDefault() => unchecked((int)(_cardAndSideToMove & CardMask));
 
     internal bool TryGetCard(out int card)
     {
-        card = _card;
+        card = GetCardOrDefault();
         return _playersTokenBits is not 0;
     }
 
-    internal Node AddMaxPlayerToken(int offset, int card)
+    internal int SideToMove() => unchecked((int)(_cardAndSideToMove >> 31));
+
+    internal Node AddMaxPlayerToken(int index, int card)
     {
-        uint playerTokenMask = 1u << offset;
+        uint playerTokenMask = 1u << index;
         uint playersTokenBits = _playersTokenBits | playerTokenMask;
-        return new(playersTokenBits, card);
+        uint cardAndSideToMove = unchecked((uint)card);
+        return new(playersTokenBits, cardAndSideToMove);
     }
 
-    internal Node AddMinPlayerToken(int offset, int card)
+    internal Node AddMinPlayerToken(int index, int card)
     {
-        uint playerTokenMask = 1u << offset;
+        uint playerTokenMask = 1u << index;
         uint playersTokenBits = _playersTokenBits | (playerTokenMask << Constants.CardCount);
-        return new(playersTokenBits, card);
+        uint cardAndSideToMove = unchecked((1u << 31) | (uint)card);
+        return new(playersTokenBits, cardAndSideToMove);
     }
 }
