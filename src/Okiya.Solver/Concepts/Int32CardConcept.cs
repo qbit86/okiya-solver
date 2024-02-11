@@ -11,16 +11,16 @@ public sealed class Int32CardConcept : ICardConcept<int>
 
     public static Int32CardConcept Instance { get; } = new();
 
-    public string ToString(int card) => s_cardStrings[card & Constants.Log2CardCountMask];
+    public string ToString(int card) => s_cardStrings[card & Constants.CardMask];
 
     public int Suit(int card) => card >> Constants.Log2RankCount;
 
-    public int Rank(int card) => card & Constants.Log2RankCountMask;
+    public int Rank(int card) => card & Constants.RankMask;
 
     public int Card(int suit, int rank) => CreateCard(suit, rank);
 
     private static int CreateCard(int suit, int rank) =>
-        (suit << Constants.Log2RankCount) | (rank & Constants.Log2RankCountMask);
+        (suit << Constants.Log2RankCount) | (rank & Constants.RankMask);
 
     private static string[] CreateCardStrings()
     {
