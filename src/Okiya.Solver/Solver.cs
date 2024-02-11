@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using static Okiya.TryHelpers;
 
 namespace Okiya;
 
@@ -50,10 +51,7 @@ public sealed class Solver
         }
 
         if (node.IsFull())
-        {
-            evaluation = 0;
-            return true;
-        }
+            return Some(0.0, out evaluation);
 
         evaluation = double.NaN;
         return false;
