@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using System.Text;
 #if DEBUG
 using System.Diagnostics;
@@ -44,6 +45,8 @@ internal readonly record struct Node
         builder.Append(p, $", Card = {card} ({Int32CardConcept.Instance.ToString(card)})");
         return true;
     }
+
+    internal bool IsFull() => BitOperations.PopCount(_playersTokens) is PlayerTokensBitCount;
 
     internal int GetPlayerTokens() => GetPlayerTokens(GetSideToMove());
 
