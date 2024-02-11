@@ -54,12 +54,15 @@ internal readonly record struct Node
     internal bool TryGetCard(out int card)
     {
         card = GetCardOrDefault();
-        return _playersTokens is not 0;
+        return _playersTokens is not 0u;
     }
 
-    internal int SideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
+    internal int GetSideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
 
-    internal Node AddMaxPlayerToken(int index, int card)
+    internal Node AddPlayerToken(int index, int card) =>
+        GetSideToMove() is 0 ? AddMaxPlayerToken(index, card) : AddMinPlayerToken(index, card);
+
+    private Node AddMaxPlayerToken(int index, int card)
     {
         uint playerTokenMask = 1u << index;
         uint playersTokens = _playersTokens | playerTokenMask;
@@ -67,7 +70,7 @@ internal readonly record struct Node
         return new(playersTokens, cardAndSideToMove);
     }
 
-    internal Node AddMinPlayerToken(int index, int card)
+    private Node AddMinPlayerToken(int index, int card)
     {
         uint playerTokenMask = 1u << index;
         uint playersTokens = _playersTokens | (playerTokenMask << PlayerTokensBitCount);
