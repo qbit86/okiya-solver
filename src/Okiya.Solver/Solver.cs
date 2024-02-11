@@ -4,8 +4,6 @@ using System.Collections.Immutable;
 
 namespace Okiya;
 
-using MoveEvalPair = KeyValuePair<int, double>;
-
 // https://en.wikipedia.org/wiki/Negamax
 
 public sealed class Solver
@@ -20,17 +18,20 @@ public sealed class Solver
 
     public IReadOnlyList<int> Board => _board;
 
-    public double Solve(out ImmutableStack<MoveEvalPair> moveEvaluationStack) =>
+    public double Solve(out ImmutableStack<int> moveEvaluationStack) =>
         Solve(new(), out moveEvaluationStack);
 
-    private double Solve(Node rootNode, out ImmutableStack<MoveEvalPair> moveEvaluationStack) =>
-        Negamax(rootNode, 1, ImmutableStack<MoveEvalPair>.Empty, out moveEvaluationStack);
+    private double Solve(Node rootNode, out ImmutableStack<int> moveEvaluationStack) =>
+        Negamax(rootNode, ImmutableStack<int>.Empty, out moveEvaluationStack);
 
-    private double Negamax(Node node, int sideToMove, ImmutableStack<MoveEvalPair> inputStack,
-        out ImmutableStack<MoveEvalPair> outputStack)
+    private double Negamax(Node node, ImmutableStack<int> inputStack,
+        out ImmutableStack<int> outputStack)
     {
         if (IsTerminalNode(node, out double evaluation))
-            throw new NotImplementedException();
+        {
+            outputStack = inputStack;
+            return evaluation;
+        }
 
         throw new NotImplementedException();
     }
