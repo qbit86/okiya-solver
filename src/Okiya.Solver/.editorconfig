@@ -1,3 +1,3 @@
-[Constants.cs]
+[{Constants.cs,Node.cs}]
 dotnet_diagnostic.CA1508.severity = none # Avoid dead conditional code
 dotnet_diagnostic.CS8520.severity = none # The given expression always matches the provided constant.
