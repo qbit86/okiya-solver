@@ -50,7 +50,7 @@ internal readonly record struct Node
 
     internal int GetPlayerTokens() => GetPlayerTokens(GetSideToMove());
 
-    private int GetPlayerTokens(int sideToMove) => sideToMove is 0 ? GetMaxPlayerTokens() : GetMinPlayerTokens();
+    internal int GetPlayerTokens(int side) => side is 0 ? GetMaxPlayerTokens() : GetMinPlayerTokens();
 
     private int GetMaxPlayerTokens() => unchecked((int)(_playersTokens & PlayerTokensMask));
 
@@ -64,7 +64,7 @@ internal readonly record struct Node
         return _playersTokens is not 0u;
     }
 
-    private int GetSideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
+    internal int GetSideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
 
     internal (int SideToMove, int PlayerTokens) GetSideToMoveAndPlayerTokens()
     {

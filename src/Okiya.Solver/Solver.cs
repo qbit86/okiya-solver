@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using static Okiya.TryHelpers;
 
@@ -36,19 +38,55 @@ public sealed class Solver
             return evaluation;
         }
 
-        throw new NotImplementedException();
+        int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
+        try
+        {
+            int possibleMoveCount = PopulatePossibleMoves(node, buffer);
+            if (possibleMoveCount is 0)
+            {
+                outputStack = inputStack;
+                return node.GetSideToMove() is 0 ? double.NegativeInfinity : double.PositiveInfinity;
+            }
+
+            ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
+            double currentMaxEvaluation = double.NegativeInfinity;
+            int currentBestMove = int.MinValue;
+            ImmutableStack<int> currentMoveStack = ImmutableStack<int>.Empty;
+            foreach (int move in possibleMoves)
+            {
+                Node child = node.AddPlayerToken(move, _board[move]);
+                double candidateEvaluation = -Negamax(child, inputStack, out ImmutableStack<int> candidateMoveStack);
+                if (candidateEvaluation > currentMaxEvaluation)
+                {
+                    currentMaxEvaluation = candidateEvaluation;
+                    currentBestMove = move;
+                    currentMoveStack = candidateMoveStack;
+                }
+            }
+
+            outputStack = currentMoveStack.Push(currentBestMove);
+            return currentMaxEvaluation;
+        }
+        finally
+        {
+            ArrayPool<int>.Shared.Return(buffer);
+        }
     }
 
-    private int PopulatePossibleMoves(Node node, Span<int> moves) => throw new NotImplementedException();
+    private int PopulatePossibleMoves(Node node, Span<int> destination) => throw new NotImplementedException();
 
     private static bool IsTerminalNode(Node node, out double evaluation)
     {
         (int sideToMove, int playerTokens) = node.GetSideToMoveAndPlayerTokens();
-        if (s_winPatterns.Any(p => (p & playerTokens) == p))
+        int opponent = (sideToMove ^ 1) & 1;
+        int opponentTokens = node.GetPlayerTokens(opponent);
+        if (s_winPatterns.Any(p => (p & opponentTokens) == p))
         {
-            evaluation = sideToMove is 0 ? double.PositiveInfinity : double.NegativeInfinity;
+            evaluation = sideToMove is 0 ? double.NegativeInfinity : double.PositiveInfinity;
             return true;
         }
+
+        Debug.Assert(s_winPatterns.All(p => (p & playerTokens) < p));
 
         if (node.IsFull())
             return Some(0.0, out evaluation);
