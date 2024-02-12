@@ -38,7 +38,7 @@ public sealed class Solver
             return evaluation;
         }
 
-        int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
+        int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
         try
         {
             int possibleMoveCount = PopulatePossibleMoves(node, buffer);
@@ -73,7 +73,28 @@ public sealed class Solver
         }
     }
 
-    private int PopulatePossibleMoves(Node node, Span<int> destination) => throw new NotImplementedException();
+    private int PopulatePossibleMoves(Node node, Span<int> destination)
+    {
+        if (!node.TryGetCard(out int lastCard))
+            return PopulatePossibleFirstMoves(node, destination);
+        Int32CardConcept c = Int32CardConcept.Instance;
+        int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
+        int moveCount = 0;
+        for (int i = 0; i < _board.Length; ++i)
+        {
+            int mask = 1 << i;
+            if ((tokensPlayed & mask) is not 0)
+                continue;
+            int candidateCard = _board[i];
+            if (c.Rank(candidateCard) != c.Rank(lastCard) && c.Suit(candidateCard) != c.Suit(lastCard))
+                continue;
+            destination[moveCount++] = i;
+        }
+
+        return moveCount;
+    }
+
+    private int PopulatePossibleFirstMoves(Node node, Span<int> destination) => throw new NotImplementedException();
 
     private static bool IsTerminalNode(Node node, out double evaluation)
     {
