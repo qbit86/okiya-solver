@@ -76,7 +76,7 @@ public sealed class Solver
     private int PopulatePossibleMoves(Node node, Span<int> destination)
     {
         if (!node.TryGetCard(out int lastCard))
-            return PopulatePossibleFirstMoves(node, destination);
+            return PopulatePossibleFirstMoves(destination);
         Int32CardConcept c = Int32CardConcept.Instance;
         int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
         int moveCount = 0;
@@ -94,7 +94,18 @@ public sealed class Solver
         return moveCount;
     }
 
-    private int PopulatePossibleFirstMoves(Node node, Span<int> destination) => throw new NotImplementedException();
+    private int PopulatePossibleFirstMoves(Span<int> destination)
+    {
+        int moveCount = 0;
+        for (int i = 0; i < _board.Length; ++i)
+        {
+            if (i is 5 or 6 or 9 or 10)
+                continue;
+            destination[moveCount++] = i;
+        }
+
+        return moveCount;
+    }
 
     private static bool IsTerminalNode(Node node, out double evaluation)
     {
