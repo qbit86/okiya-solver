@@ -80,7 +80,7 @@ internal readonly record struct Node
     {
         uint playerTokenMask = 1u << index;
         uint playersTokens = _playersTokens | playerTokenMask;
-        uint cardAndSideToMove = unchecked((uint)card);
+        uint cardAndSideToMove = unchecked((1u << CardBitCount) | (uint)card);
         return new(playersTokens, cardAndSideToMove);
     }
 
@@ -88,7 +88,7 @@ internal readonly record struct Node
     {
         uint playerTokenMask = 1u << index;
         uint playersTokens = _playersTokens | (playerTokenMask << PlayerTokensBitCount);
-        uint cardAndSideToMove = unchecked((1u << CardBitCount) | (uint)card);
+        uint cardAndSideToMove = unchecked((uint)card);
         return new(playersTokens, cardAndSideToMove);
     }
 }
