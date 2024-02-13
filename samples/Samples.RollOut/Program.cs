@@ -10,7 +10,7 @@ internal static class Program
 {
     private static void Main()
     {
-        Random random = new(1729);
+        Random random = new(42);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         random.Shuffle(cards);
         Solver solver = new(cards);
@@ -21,7 +21,11 @@ internal static class Program
         Console.WriteLine(Invariant($"{nameof(evaluation)}: {evaluation}"));
         Console.WriteLine(Invariant($"{nameof(moves)}.Count: {moves.Count()}"));
         Console.WriteLine($"{nameof(moves)}:");
-        foreach (int move in moves)
-            Console.WriteLine($"\t{move} ({Int32CardConcept.Instance.ToString(cards[move])})");
+        ImmutableStack<int>.Enumerator enumerator = moves.GetEnumerator();
+        for (int i = 0; enumerator.MoveNext(); ++i)
+        {
+            int move = enumerator.Current;
+            Console.WriteLine($"\t{i}.\t{move}\t{Int32CardConcept.Instance.ToString(cards[move])}");
+        }
     }
 }

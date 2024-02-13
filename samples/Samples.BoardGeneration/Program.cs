@@ -10,7 +10,7 @@ internal static class Program
 
     private static void Main()
     {
-        Random random = new(1729);
+        Random random = new(42);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         random.Shuffle(cards);
         const int columnCount = 4;
