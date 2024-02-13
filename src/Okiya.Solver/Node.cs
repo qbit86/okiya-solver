@@ -48,7 +48,7 @@ internal readonly record struct Node
 
     internal bool IsFull() => BitOperations.PopCount(_playersTokens) is PlayerTokensBitCount;
 
-    internal int GetPlayerTokens() => GetPlayerTokens(GetSideToMove());
+    internal int GetTokenCount() => BitOperations.PopCount(_playersTokens);
 
     internal int GetPlayerTokens(int side) => side is 0 ? GetMaxPlayerTokens() : GetMinPlayerTokens();
 

@@ -46,8 +46,9 @@ public sealed class Solver
             int possibleMoveCount = PopulatePossibleMoves(node, buffer);
             if (possibleMoveCount is 0)
             {
+                int tokenCount = node.GetTokenCount();
                 outputStack = inputStack;
-                return node.GetSideToMove() is 0 ? double.MinValue : double.MaxValue;
+                return node.GetSideToMove() is 0 ? int.MinValue + tokenCount : int.MaxValue - tokenCount;
             }
 
             ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
@@ -114,19 +115,44 @@ public sealed class Solver
         (int sideToMove, int playerTokens) = node.GetSideToMoveAndPlayerTokens();
         int opponent = (sideToMove ^ 1) & 1;
         int opponentTokens = node.GetPlayerTokens(opponent);
-        if (s_winPatterns.Any(p => (p & opponentTokens) == p))
+        if (IsWinning(opponentTokens))
         {
-            evaluation = sideToMove is 0 ? double.MinValue : double.MaxValue;
+            int tokenCount = node.GetTokenCount();
+            evaluation = sideToMove is 0 ? int.MinValue + tokenCount : int.MaxValue - tokenCount;
             return true;
         }
 
-        Debug.Assert(s_winPatterns.All(p => (p & playerTokens) < p));
+        Debug.Assert(IsNotWinning(playerTokens));
 
         if (node.IsFull())
             return Some(0.0, out evaluation);
 
         evaluation = double.NaN;
         return false;
+    }
+
+    private static bool IsWinning(int tokens)
+    {
+        // return s_winPatterns.Any(pattern => (pattern & tokens) == pattern);
+        foreach (int pattern in s_winPatterns)
+        {
+            if ((pattern & tokens) == pattern)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsNotWinning(int tokens)
+    {
+        // return s_winPatterns.All(pattern => (pattern & tokens) < pattern);
+        foreach (int pattern in s_winPatterns)
+        {
+            if ((pattern & tokens) == pattern)
+                return false;
+        }
+
+        return true;
     }
 
     private static int[] CreateWinPatters() =>
