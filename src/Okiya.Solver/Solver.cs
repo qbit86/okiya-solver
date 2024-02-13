@@ -47,27 +47,27 @@ public sealed class Solver
             if (possibleMoveCount is 0)
             {
                 outputStack = inputStack;
-                return node.GetSideToMove() is 0 ? double.NegativeInfinity : double.PositiveInfinity;
+                return node.GetSideToMove() is 0 ? double.MinValue : double.MaxValue;
             }
 
             ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
-            double currentMaxEvaluation = double.NegativeInfinity;
-            int currentBestMove = int.MinValue;
-            ImmutableStack<int> currentMoveStack = ImmutableStack<int>.Empty;
+            double bestEvaluation = double.NegativeInfinity;
+            int bestMove = int.MinValue;
+            ImmutableStack<int> bestMoveStack = ImmutableStack<int>.Empty;
             foreach (int move in possibleMoves)
             {
                 Node child = node.AddPlayerToken(move, _board[move]);
                 double candidateEvaluation = -Negamax(child, inputStack, out ImmutableStack<int> candidateMoveStack);
-                if (candidateEvaluation > currentMaxEvaluation)
+                if (candidateEvaluation > bestEvaluation)
                 {
-                    currentMaxEvaluation = candidateEvaluation;
-                    currentBestMove = move;
-                    currentMoveStack = candidateMoveStack;
+                    bestEvaluation = candidateEvaluation;
+                    bestMove = move;
+                    bestMoveStack = candidateMoveStack;
                 }
             }
 
-            outputStack = currentMoveStack.Push(currentBestMove);
-            return currentMaxEvaluation;
+            outputStack = bestMoveStack.Push(bestMove);
+            return bestEvaluation;
         }
         finally
         {
@@ -116,7 +116,7 @@ public sealed class Solver
         int opponentTokens = node.GetPlayerTokens(opponent);
         if (s_winPatterns.Any(p => (p & opponentTokens) == p))
         {
-            evaluation = sideToMove is 0 ? double.NegativeInfinity : double.PositiveInfinity;
+            evaluation = sideToMove is 0 ? double.MinValue : double.MaxValue;
             return true;
         }
 
