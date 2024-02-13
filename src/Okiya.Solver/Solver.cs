@@ -23,6 +23,8 @@ public sealed class Solver
 
     public IReadOnlyList<int> Board => _board;
 
+    public override string ToString() => string.Join(' ', _board.Select(Int32CardConcept.Instance.ToString));
+
     public double Solve(out ImmutableStack<int> moveEvaluationStack) =>
         Solve(new(), out moveEvaluationStack);
 
