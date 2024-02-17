@@ -11,6 +11,8 @@ namespace Okiya;
 
 internal static class Program
 {
+    private static readonly string[] s_suitClasses = ["suit0", "suit1", "suit2", "suit3"];
+
     private static void Main()
     {
         const int seed = 42;
@@ -40,8 +42,27 @@ internal static class Program
             Console.WriteLine($"\t{i}.\t{move}\t{Int32CardConcept.Instance.ToString(cards[move])}");
         }
 
-        XDocument document = HtmlHelpers.CreateHtmlDocument(out XElement title, out _);
+        XDocument document = HtmlHelpers.CreateHtmlDocument(out XElement title, out XElement body);
+
         title.Add($"{nameof(Okiya)} - {seed}");
+
+        XElement boardDiv = new("div", new XAttribute("class", "monospace"));
+        body.Add(boardDiv);
+
+        const int columnCount = 4;
+        int rowCount = (cards.Length + columnCount - 1) / columnCount;
+        for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
+        {
+            if (rowIndex > 0)
+                boardDiv.Add(new XElement("br"));
+            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex, ++cardIndex)
+            {
+                int card = cards[cardIndex];
+                string s = Int32CardConcept.Instance.ToString(card);
+                string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
+                boardDiv.Add(new XElement("span", new XAttribute("class", suitClass), s));
+            }
+        }
 
         string outputDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             nameof(Okiya), Assembly.GetExecutingAssembly().GetName().Name);
