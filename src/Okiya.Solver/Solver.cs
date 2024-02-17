@@ -21,15 +21,30 @@ public sealed class Solver
         _board = board;
     }
 
-    public IReadOnlyList<int> Board => _board;
-
     public override string ToString() => string.Join(' ', _board.Select(Int32CardConcept.Instance.ToString));
 
-    public double Solve(out ImmutableStack<int> moveEvaluationStack) =>
-        Solve(new(), out moveEvaluationStack);
+    public double Solve(Span<int> moves, out int movesWritten)
+    {
+        double result = Solve(new(), out ImmutableStack<int> moveStack);
+        ImmutableStack<int>.Enumerator enumerator = moveStack.GetEnumerator();
+        for (movesWritten = 0; movesWritten < moves.Length && enumerator.MoveNext(); ++movesWritten)
+            moves[movesWritten] = enumerator.Current;
+        return result;
+    }
 
-    private double Solve(Node rootNode, out ImmutableStack<int> moveEvaluationStack) =>
-        Negamax(rootNode, ImmutableStack<int>.Empty, out moveEvaluationStack);
+    public double Solve<TMoveCollection>(TMoveCollection moves)
+        where TMoveCollection : ICollection<int>
+    {
+        if (moves is null)
+            throw new ArgumentNullException(nameof(moves));
+        double result = Solve(new(), out ImmutableStack<int> moveStack);
+        foreach (int move in moveStack)
+            moves.Add(move);
+        return result;
+    }
+
+    private double Solve(Node rootNode, out ImmutableStack<int> moves) =>
+        Negamax(rootNode, ImmutableStack<int>.Empty, out moves);
 
     private double Negamax(Node node, ImmutableStack<int> inputStack,
         out ImmutableStack<int> outputStack)
@@ -117,8 +132,8 @@ public sealed class Solver
         int opponentTokens = node.GetPlayerTokens(opponent);
         if (IsWinning(opponentTokens))
         {
-            int tokenCount = node.GetTokenCount();
-            evaluation = sideToMove is 0 ? int.MinValue + tokenCount : int.MaxValue - tokenCount;
+            double tokenCount = node.GetTokenCount();
+            evaluation = sideToMove is 0 ? int.MinValue - tokenCount : int.MaxValue + tokenCount;
             return true;
         }
 
