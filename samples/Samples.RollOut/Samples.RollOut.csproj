@@ -8,4 +8,9 @@
     <ProjectReference Include="..\..\src\Okiya.Solver\Okiya.Solver.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="style.css" />
+    <EmbeddedResource Include="style.css" />
+  </ItemGroup>
+
 </Project>
