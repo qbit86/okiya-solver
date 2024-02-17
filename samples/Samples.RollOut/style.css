@@ -2,22 +2,22 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
-.suit0 {
+span.suit0 {
   color: #eee8d5;
   background-color: #859900;
 }
 
-.suit1 {
+span.suit1 {
   color: #eee8d5;
   background-color: #268bd2;
 }
 
-.suit2 {
+span.suit2 {
   color: #eee8d5;
   background-color: #dc322f;
 }
 
-.suit3 {
+span.suit3 {
   color: #eee8d5;
   background-color: #002b36;
 }
