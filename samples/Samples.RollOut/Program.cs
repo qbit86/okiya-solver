@@ -40,6 +40,9 @@ internal static class Program
             Console.WriteLine($"\t{i}.\t{move}\t{Int32CardConcept.Instance.ToString(cards[move])}");
         }
 
+        XDocument document = HtmlHelpers.CreateHtmlDocument(out XElement title, out _);
+        title.Add($"{nameof(Okiya)} - {seed}");
+
         string outputDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             nameof(Okiya), Assembly.GetExecutingAssembly().GetName().Name);
         if (!Directory.Exists(outputDir))
@@ -47,10 +50,6 @@ internal static class Program
         string outputBaseName = $"{DateTime.Now:dd_HH-mm-ss}.html";
         string outputPath = Path.Join(outputDir, outputBaseName);
         Console.WriteLine($"{nameof(outputPath)}: {outputPath}");
-
-        XDocument document = HtmlHelpers.CreateHtmlDocument(out XElement title, out _);
-        title.Add(new XText($"{nameof(Okiya)} - {seed}"));
-
         XmlWriterSettings settings = new() { Indent = true, OmitXmlDeclaration = true };
         using var writer = XmlWriter.Create(outputPath, settings);
         document.Save(writer);
