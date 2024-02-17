@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Xml;
+using System.Xml.Linq;
 using static System.FormattableString;
 
 namespace Okiya;
@@ -34,5 +38,18 @@ internal static class Program
             int move = enumerator.Current;
             Console.WriteLine($"\t{i}.\t{move}\t{Int32CardConcept.Instance.ToString(cards[move])}");
         }
+
+        string outputDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            nameof(Okiya), Assembly.GetExecutingAssembly().GetName().Name);
+        if (!Directory.Exists(outputDir))
+            Directory.CreateDirectory(outputDir);
+        string outputBaseName = $"{DateTime.Now:dd_HH-mm-ss}.html";
+        string outputPath = Path.Join(outputDir, outputBaseName);
+        Console.WriteLine($"{nameof(outputPath)}: {outputPath}");
+
+        XDocument document = HtmlHelpers.CreateHtmlDocument(out _, out _);
+        XmlWriterSettings settings = new() { Indent = true, OmitXmlDeclaration = true };
+        using var writer = XmlWriter.Create(outputPath, settings);
+        document.Save(writer);
     }
 }
