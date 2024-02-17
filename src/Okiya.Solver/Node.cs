@@ -43,6 +43,7 @@ internal readonly record struct Node
         builder.Append(p, $"Players = {GetMinPlayerTokens():b16}|{GetMaxPlayerTokens():b16}");
         int card = GetCardOrDefault();
         builder.Append(p, $", Card = {card} ({Int32CardConcept.Instance.ToString(card)})");
+        builder.Append(p, $", SideToMove = {GetSideToMove()}");
         return true;
     }
 
