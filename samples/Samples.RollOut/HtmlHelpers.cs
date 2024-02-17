@@ -24,14 +24,17 @@ internal static class HtmlHelpers
         using Stream stream = assembly.GetManifestResourceStream(resourceName)!;
         using StreamReader streamReader = new(stream, Encoding.UTF8);
 
+        XElement preConnectFontLink = new("link", new XAttribute("href", "https://fonts.googleapis.com"));
+        XElement fontLink = new("link",
+            new XAttribute("href", "https://fonts.googleapis.com/css2?family=JetBrains+Mono"),
+            new XAttribute("rel", "stylesheet"));
         XElement style = new("style",
             new XAttribute("type", "text/css"),
             Environment.NewLine,
-            streamReader.ReadToEnd(),
-            Environment.NewLine
+            streamReader.ReadToEnd()
         );
 
-        XElement html = new("html", new XElement("head", title, style), body);
+        XElement html = new("html", new XElement("head", preConnectFontLink, fontLink, style, title), body);
         document.Add(html);
         return document;
     }
