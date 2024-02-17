@@ -1,3 +1,7 @@
+.monospace {
+  font-family: 'JetBrains Mono', monospace;
+}
+
 .suit0 {
   color: #eee8d5;
   background-color: #859900;
