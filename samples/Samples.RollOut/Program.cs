@@ -13,7 +13,8 @@ internal static class Program
 {
     private static void Main()
     {
-        Random random = new(42);
+        const int seed = 42;
+        Random random = new(seed);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         random.Shuffle(cards);
         var stopwatch = Stopwatch.StartNew();
@@ -47,7 +48,9 @@ internal static class Program
         string outputPath = Path.Join(outputDir, outputBaseName);
         Console.WriteLine($"{nameof(outputPath)}: {outputPath}");
 
-        XDocument document = HtmlHelpers.CreateHtmlDocument(out _, out _);
+        XDocument document = HtmlHelpers.CreateHtmlDocument(out XElement title, out _);
+        title.Add(new XText($"{nameof(Okiya)} - {seed}"));
+
         XmlWriterSettings settings = new() { Indent = true, OmitXmlDeclaration = true };
         using var writer = XmlWriter.Create(outputPath, settings);
         document.Save(writer);
