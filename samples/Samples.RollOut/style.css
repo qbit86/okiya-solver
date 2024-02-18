@@ -1,9 +1,18 @@
-.monospace {
+div.board, .monospace {
   font-family: 'JetBrains Mono', monospace;
 }
 
+div.board {
+  line-height: 1.6;
+}
+
 span.suit0, span.suit1, span.suit2, span.suit3 {
+  border-radius: 5px;
+  border-style: solid;
+  border-width: thin;
   color: #eee8d5;
+  padding-left: 0.2em;
+  padding-right: 0.2em;
 }
 
 span.suit0 {

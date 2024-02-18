@@ -46,7 +46,7 @@ internal static class Program
 
         title.Add($"{nameof(Okiya)} - {seed}");
 
-        XElement boardDiv = new("div", new XAttribute("class", "monospace"));
+        XElement boardDiv = new("div", new XAttribute("class", "board"));
         body.Add(boardDiv);
 
         const int columnCount = 4;
