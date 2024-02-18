@@ -1,9 +1,5 @@
-div.board, .monospace {
+.monospace {
   font-family: 'JetBrains Mono', monospace;
-}
-
-div.board {
-  line-height: 1.6;
 }
 
 span.suit0, span.suit1, span.suit2, span.suit3 {
@@ -28,4 +24,8 @@ span.suit2 {
 
 span.suit3 {
   background-color: #002b36;
+}
+
+table.board {
+  text-align: center;
 }

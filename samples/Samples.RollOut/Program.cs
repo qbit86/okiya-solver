@@ -46,21 +46,23 @@ internal static class Program
 
         title.Add($"{nameof(Okiya)} - {seed}");
 
-        XElement boardDiv = new("div", new XAttribute("class", "board"));
-        body.Add(boardDiv);
+        XElement boardTable = new("table", new XAttribute("class", "board"));
+        body.Add(boardTable);
 
         const int columnCount = 4;
         int rowCount = (cards.Length + columnCount - 1) / columnCount;
         for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
         {
-            if (rowIndex > 0)
-                boardDiv.Add(new XElement("br"));
+            XElement tr = new("tr");
+            boardTable.Add(tr);
             for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex, ++cardIndex)
             {
                 int card = cards[cardIndex];
                 string s = Int32CardConcept.Instance.ToString(card);
                 string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
-                boardDiv.Add(new XElement("span", new XAttribute("class", suitClass), s));
+                XElement td = new("td");
+                tr.Add(td);
+                td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
             }
         }
 
