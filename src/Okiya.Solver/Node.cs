@@ -11,8 +11,6 @@ internal readonly record struct Node
 {
     private const int PlayerTokensBitCount = 16;
 
-    private const int PlayerTokensMask = 0xFFFF;
-
     private const int CardBitCount = 31;
 
     private const int CardMask = 0x7fffffff;
@@ -25,7 +23,7 @@ internal readonly record struct Node
     {
         Debug.Assert(PlayerTokensBitCount is Constants.CardCount);
         Debug.Assert(PlayerTokensBitCount > 0);
-        Debug.Assert(1 << PlayerTokensBitCount is PlayerTokensMask + 1);
+        Debug.Assert(1 << PlayerTokensBitCount is Constants.PlayerTokensMask + 1);
         Debug.Assert(CardBitCount > 0);
         Debug.Assert(1u << CardBitCount is CardMask + 1u);
     }
@@ -53,7 +51,7 @@ internal readonly record struct Node
 
     internal int GetPlayerTokens(int side) => side is 0 ? GetMaxPlayerTokens() : GetMinPlayerTokens();
 
-    private int GetMaxPlayerTokens() => unchecked((int)(_playersTokens & PlayerTokensMask));
+    private int GetMaxPlayerTokens() => unchecked((int)(_playersTokens & Constants.PlayerTokensMask));
 
     private int GetMinPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
 

@@ -25,6 +25,8 @@ public static class Constants
 
     internal const int RankMask = 0b11;
 
+    internal const int PlayerTokensMask = 0xFFFF;
+
 #if DEBUG
     static Constants()
     {
@@ -44,6 +46,8 @@ public static class Constants
         Debug.Assert(1 << RankBitCount is RankMask + 1);
 
         Debug.Assert(SuitCount * RankCount is CardCount);
+
+        Debug.Assert(1 << CardCount is PlayerTokensMask + 1);
     }
 #endif
 }
