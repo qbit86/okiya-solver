@@ -17,7 +17,7 @@ public static class Constants
 
     private const int SuitBitCount = 2;
 
-    internal const int SuitMask = 0b11;
+    private const int SuitMask = 0b11;
 
     internal const int RankCount = 4;
 
