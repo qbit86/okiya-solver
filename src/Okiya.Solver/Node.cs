@@ -35,6 +35,19 @@ internal readonly record struct Node
         _cardAndSideToMove = cardAndSideToMove;
     }
 
+    internal static Node CreateUnchecked(uint maxPlayerTokens, uint minPlayerTokens, int sideToMove, int card)
+    {
+        Debug.Assert(maxPlayerTokens <= Constants.PlayerTokensMask);
+        Debug.Assert(minPlayerTokens <= Constants.PlayerTokensMask);
+        Debug.Assert((maxPlayerTokens & minPlayerTokens) is 0);
+        Debug.Assert(sideToMove is 0 or 1);
+        Debug.Assert((uint)card < Constants.CardCount);
+        uint playersTokens = maxPlayerTokens | (minPlayerTokens << Constants.CardCount);
+        uint sideBit = sideToMove is 0 ? 0 : 1u << CardBitCount;
+        uint cardAndSideToMove = sideBit | unchecked((uint)card);
+        return new(playersTokens, cardAndSideToMove);
+    }
+
     private bool PrintMembers(StringBuilder builder)
     {
         CultureInfo p = CultureInfo.InvariantCulture;
