@@ -36,14 +36,14 @@ internal readonly record struct Node
         _cardAndSideToMove = cardAndSideToMove;
     }
 
-    internal static Node CreateUnchecked(uint maxPlayerTokens, uint minPlayerTokens, int sideToMove, int card)
+    internal static Node CreateUnchecked(uint firstPlayerTokens, uint secondPlayerTokens, int sideToMove, int card)
     {
-        Debug.Assert(maxPlayerTokens <= Constants.PlayerTokensMask);
-        Debug.Assert(minPlayerTokens <= Constants.PlayerTokensMask);
-        Debug.Assert((maxPlayerTokens & minPlayerTokens) is 0);
+        Debug.Assert(firstPlayerTokens <= Constants.PlayerTokensMask);
+        Debug.Assert(secondPlayerTokens <= Constants.PlayerTokensMask);
+        Debug.Assert((firstPlayerTokens & secondPlayerTokens) is 0);
         Debug.Assert(sideToMove is 0 or 1);
         Debug.Assert((uint)card < Constants.CardCount);
-        uint playersTokens = maxPlayerTokens | (minPlayerTokens << Constants.CardCount);
+        uint playersTokens = firstPlayerTokens | (secondPlayerTokens << Constants.CardCount);
         uint sideBit = sideToMove is 0 ? 0 : 1u << CardBitCount;
         uint cardAndSideToMove = sideBit | unchecked((uint)card);
         return new(playersTokens, cardAndSideToMove);
@@ -52,7 +52,7 @@ internal readonly record struct Node
     private bool PrintMembers(StringBuilder builder)
     {
         CultureInfo p = CultureInfo.InvariantCulture;
-        builder.Append(p, $"Players = {GetMinPlayerTokens():b16}|{GetMaxPlayerTokens():b16}");
+        builder.Append(p, $"Players = {GetSecondPlayerTokens():b16}|{GetFirstPlayerTokens():b16}");
         int card = GetCardOrDefault();
         builder.Append(p, $", Card = {card} ({Int32CardConcept.Instance.ToString(card)})");
         builder.Append(p, $", SideToMove = {GetSideToMove()}");
@@ -63,11 +63,11 @@ internal readonly record struct Node
 
     internal int GetTokenCount() => BitOperations.PopCount(_playersTokens);
 
-    internal int GetPlayerTokens(int side) => side is 0 ? GetMaxPlayerTokens() : GetMinPlayerTokens();
+    internal int GetPlayerTokens(int side) => side is 0 ? GetFirstPlayerTokens() : GetSecondPlayerTokens();
 
-    private int GetMaxPlayerTokens() => unchecked((int)(_playersTokens & Constants.PlayerTokensMask));
+    private int GetFirstPlayerTokens() => unchecked((int)(_playersTokens & Constants.PlayerTokensMask));
 
-    private int GetMinPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
+    private int GetSecondPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
 
     private int GetCardOrDefault() => unchecked((int)(_cardAndSideToMove & CardMask));
 
@@ -81,8 +81,8 @@ internal readonly record struct Node
 
     internal (int CurrentPlayerTokens, int OpponentPlayerTokens) GetPlayersTokens()
     {
-        int firstPlayerTokens = GetMaxPlayerTokens();
-        int secondPlayerTokens = GetMinPlayerTokens();
+        int firstPlayerTokens = GetFirstPlayerTokens();
+        int secondPlayerTokens = GetSecondPlayerTokens();
         return GetSideToMove() is 0 ? (firstPlayerTokens, secondPlayerTokens) : (secondPlayerTokens, firstPlayerTokens);
     }
 
@@ -95,9 +95,9 @@ internal readonly record struct Node
     }
 
     internal Node AddPlayerToken(int index, int card) =>
-        GetSideToMove() is 0 ? AddMaxPlayerToken(index, card) : AddMinPlayerToken(index, card);
+        GetSideToMove() is 0 ? AddFirstPlayerToken(index, card) : AddSecondPlayerToken(index, card);
 
-    private Node AddMaxPlayerToken(int index, int card)
+    private Node AddFirstPlayerToken(int index, int card)
     {
         uint playerTokenMask = 1u << index;
         uint playersTokens = _playersTokens | playerTokenMask;
@@ -105,7 +105,7 @@ internal readonly record struct Node
         return new(playersTokens, cardAndSideToMove);
     }
 
-    private Node AddMinPlayerToken(int index, int card)
+    private Node AddSecondPlayerToken(int index, int card)
     {
         uint playerTokenMask = 1u << index;
         uint playersTokens = _playersTokens | (playerTokenMask << PlayerTokensBitCount);

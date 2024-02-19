@@ -13,10 +13,10 @@ public sealed class Solver
     private readonly int[] _board;
     private readonly Node _currentNode;
 
-    private Solver(int[] board, Node initialNode)
+    private Solver(int[] board, Node rootNode)
     {
         _board = board;
-        _currentNode = initialNode;
+        _currentNode = rootNode;
     }
 
     public static Solver Create(int[] board)
@@ -29,25 +29,26 @@ public sealed class Solver
     }
 
     public static Solver Create(
-        int[] board, int maximizingPlayerTokens, int minimizingPlayerTokens, int sideToMove, int lastCard = default)
+        int[] board, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCard = default)
     {
         ArgumentNullException.ThrowIfNull(board);
         if (board.Length < Constants.CardCount)
             throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
-        uint maxPlayerTokens = (uint)maximizingPlayerTokens;
-        if (maxPlayerTokens > Constants.PlayerTokensMask)
-            throw new ArgumentOutOfRangeException(nameof(maximizingPlayerTokens));
-        uint minPlayerTokens = (uint)minimizingPlayerTokens;
-        if (minPlayerTokens > Constants.PlayerTokensMask)
-            throw new ArgumentOutOfRangeException(nameof(minimizingPlayerTokens));
-        if ((maxPlayerTokens & minPlayerTokens) is not 0)
-            throw new ArgumentException("Players' tokens may not overlap.", nameof(minimizingPlayerTokens));
+        uint firstPlayerTokensChecked = (uint)firstPlayerTokens;
+        if (firstPlayerTokensChecked > Constants.PlayerTokensMask)
+            throw new ArgumentOutOfRangeException(nameof(firstPlayerTokens));
+        uint secondPlayerTokensChecked = (uint)secondPlayerTokens;
+        if (secondPlayerTokensChecked > Constants.PlayerTokensMask)
+            throw new ArgumentOutOfRangeException(nameof(secondPlayerTokens));
+        if ((firstPlayerTokensChecked & secondPlayerTokensChecked) is not 0)
+            throw new ArgumentException("Players' tokens may not overlap.", nameof(secondPlayerTokens));
         if (sideToMove is not (0 or 1))
             throw new ArgumentOutOfRangeException(nameof(sideToMove));
         if ((uint)lastCard >= Constants.CardCount)
             throw new ArgumentOutOfRangeException(nameof(lastCard));
 
-        return new(board, Node.CreateUnchecked(maxPlayerTokens, minPlayerTokens, sideToMove, lastCard));
+        var rootNode = Node.CreateUnchecked(firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCard);
+        return new(board, rootNode);
     }
 
     public bool TrySelectMove(out int move, out double score)
