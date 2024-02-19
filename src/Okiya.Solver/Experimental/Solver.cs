@@ -50,19 +50,36 @@ public sealed class Solver
         return new(board, Node.CreateUnchecked(maxPlayerTokens, minPlayerTokens, sideToMove, lastCard));
     }
 
-    public bool TrySelectMove(out int move, out double evaluation)
+    public bool TrySelectMove(out int move, out double score)
     {
-        int sign = Sign(_currentNode.GetSideToMove());
-        if (IsTerminalNode(_currentNode, out double evaluationFromCurrentPlayerPerspective))
+        if (IsTerminalNode(_currentNode, out double relativeScore))
         {
-            evaluation = sign * evaluationFromCurrentPlayerPerspective;
+            int sign = Sign(_currentNode.GetSideToMove());
+            score = sign * relativeScore;
             return None(out move);
         }
 
         throw new NotImplementedException();
     }
 
-    private static bool IsTerminalNode(Node node, out double evaluation) => throw new NotImplementedException();
+    private static bool IsTerminalNode(Node node, out double score)
+    {
+        (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
+        if (RuleHelpers.IsWinning(opponentTokens))
+        {
+            double tokenCount = node.GetTokenCount();
+            score = -sbyte.MaxValue + tokenCount;
+            return true;
+        }
+
+        Debug.Assert(RuleHelpers.IsNotWinning(playerTokens));
+
+        if (node.IsFull())
+            return Some(0.0, out score);
+
+        score = double.NaN;
+        return false;
+    }
 
     private static int Sign(int sideToMove) =>
         sideToMove switch { 0 => 1, 1 => -1, _ => ThrowUnreachableException() };

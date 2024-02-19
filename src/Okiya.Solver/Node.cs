@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -78,6 +79,14 @@ internal readonly record struct Node
 
     internal int GetSideToMove() => unchecked((int)(_cardAndSideToMove >> CardBitCount));
 
+    internal (int CurrentPlayerTokens, int OpponentPlayerTokens) GetPlayersTokens()
+    {
+        int firstPlayerTokens = GetMaxPlayerTokens();
+        int secondPlayerTokens = GetMinPlayerTokens();
+        return GetSideToMove() is 0 ? (firstPlayerTokens, secondPlayerTokens) : (secondPlayerTokens, firstPlayerTokens);
+    }
+
+    [Obsolete("Use GetPlayersTokens() instead.")]
     internal (int SideToMove, int PlayerTokens) GetSideToMoveAndPlayerTokens()
     {
         int sideToMove = GetSideToMove();
