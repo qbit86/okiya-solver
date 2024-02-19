@@ -1,4 +1,8 @@
 using System;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using static Okiya.TryHelpers;
 
 namespace Okiya.Experimental;
 
@@ -7,12 +11,21 @@ namespace Okiya.Experimental;
 public sealed class Solver
 {
     private readonly int[] _board;
-    private Node _currentNode;
+    private readonly Node _currentNode;
 
     private Solver(int[] board, Node initialNode)
     {
         _board = board;
         _currentNode = initialNode;
+    }
+
+    public static Solver Create(int[] board)
+    {
+        ArgumentNullException.ThrowIfNull(board);
+        if (board.Length < Constants.CardCount)
+            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
+
+        return new(board, new());
     }
 
     public static Solver Create(
@@ -36,4 +49,25 @@ public sealed class Solver
 
         return new(board, Node.CreateUnchecked(maxPlayerTokens, minPlayerTokens, sideToMove, lastCard));
     }
+
+    public bool TrySelectMove(out int move, out double evaluation)
+    {
+        int sign = Sign(_currentNode.GetSideToMove());
+        if (IsTerminalNode(_currentNode, out double evaluationFromCurrentPlayerPerspective))
+        {
+            evaluation = sign * evaluationFromCurrentPlayerPerspective;
+            return None(out move);
+        }
+
+        throw new NotImplementedException();
+    }
+
+    private static bool IsTerminalNode(Node node, out double evaluation) => throw new NotImplementedException();
+
+    private static int Sign(int sideToMove) =>
+        sideToMove switch { 0 => 1, 1 => -1, _ => ThrowUnreachableException() };
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    private static int ThrowUnreachableException() => throw new UnreachableException();
 }
