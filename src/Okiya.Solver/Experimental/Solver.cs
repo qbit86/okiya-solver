@@ -100,7 +100,38 @@ public sealed class Solver
         }
     }
 
-    private static double Negamax(Node node) => throw new NotImplementedException();
+    private double Negamax(Node node)
+    {
+        if (IsTerminalNode(node, out double score))
+            return score;
+
+        int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
+        try
+        {
+            int possibleMoveCount = PopulatePossibleMoves(_currentNode, buffer);
+            if (possibleMoveCount is 0)
+            {
+                int tokenCount = _currentNode.GetTokenCount();
+                return -sbyte.MaxValue + tokenCount;
+            }
+
+            ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
+            double bestScore = double.NegativeInfinity;
+            foreach (int moveCandidate in possibleMoves)
+            {
+                Node child = _currentNode.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                double scoreCandidate = -Negamax(child);
+                if (scoreCandidate > bestScore)
+                    bestScore = scoreCandidate;
+            }
+
+            return bestScore;
+        }
+        finally
+        {
+            ArrayPool<int>.Shared.Return(buffer);
+        }
+    }
 
     private static bool IsTerminalRoot(Node node, out double score)
     {
