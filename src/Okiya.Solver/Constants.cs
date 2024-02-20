@@ -9,15 +9,19 @@ public static class Constants
 {
     public const int CardCount = 16;
 
+#if DEBUG
     private const int CardBitCount = 4;
+#endif
 
     internal const int CardMask = 0b1111;
 
     internal const int SuitCount = 4;
 
+#if DEBUG
     private const int SuitBitCount = 2;
 
     private const int SuitMask = 0b11;
+#endif
 
     internal const int RankCount = 4;
 

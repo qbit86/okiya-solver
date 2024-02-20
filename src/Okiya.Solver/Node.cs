@@ -1,9 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 using System.Text;
-#if DEBUG
 using System.Diagnostics;
-#endif
 
 namespace Okiya;
 
