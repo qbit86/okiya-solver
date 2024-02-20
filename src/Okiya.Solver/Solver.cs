@@ -13,10 +13,12 @@ namespace Okiya;
 public sealed class Solver
 {
     private readonly int[] _board;
+    private readonly Game<int[]> _game;
     private Node _currentNode;
 
-    private Solver(int[] board, Node rootNode)
+    private Solver(Game<int[]> game, int[] board, Node rootNode)
     {
+        _game = game;
         _board = board;
         _currentNode = rootNode;
     }
@@ -27,7 +29,7 @@ public sealed class Solver
         if (board.Length < Constants.CardCount)
             throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
 
-        return new(board, new());
+        return new(new(board), board, new());
     }
 
     public static Solver Create(
@@ -51,7 +53,7 @@ public sealed class Solver
 
         var rootNode = Node.CreateUnchecked(
             firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCardIndex);
-        return new(board, rootNode);
+        return new(new(board), board, rootNode);
     }
 
     public bool TrySelectMove(out int move, out double score)
@@ -116,7 +118,7 @@ public sealed class Solver
         int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
         try
         {
-            int possibleMoveCount = PopulatePossibleMoves(_currentNode, buffer);
+            int possibleMoveCount = _game.PopulatePossibleMoves(_currentNode, buffer);
             if (possibleMoveCount is 0)
             {
                 int tokenCount = _currentNode.GetTokenCount();
@@ -156,7 +158,7 @@ public sealed class Solver
         int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
         try
         {
-            int possibleMoveCount = PopulatePossibleMoves(node, buffer);
+            int possibleMoveCount = _game.PopulatePossibleMoves(node, buffer);
             if (possibleMoveCount is 0)
             {
                 int tokenCount = node.GetTokenCount();
@@ -213,41 +215,6 @@ public sealed class Solver
 
     private static int Sign(int sideToMove) =>
         sideToMove switch { 0 => 1, 1 => -1, _ => ThrowUnreachableException() };
-
-    private int PopulatePossibleMoves(Node node, Span<int> destination)
-    {
-        if (!node.TryGetCardIndex(out int lastCardIndex))
-            return PopulatePossibleFirstMoves(destination);
-        int lastCard = _board[lastCardIndex];
-        Int32CardConcept c = Int32CardConcept.Instance;
-        int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
-        int moveCount = 0;
-        for (int i = 0; i < _board.Length; ++i)
-        {
-            int mask = 1 << i;
-            if ((tokensPlayed & mask) is not 0)
-                continue;
-            int candidateCard = _board[i];
-            if (c.Rank(candidateCard) != c.Rank(lastCard) && c.Suit(candidateCard) != c.Suit(lastCard))
-                continue;
-            destination[moveCount++] = i;
-        }
-
-        return moveCount;
-    }
-
-    private int PopulatePossibleFirstMoves(Span<int> destination)
-    {
-        int moveCount = 0;
-        for (int i = 0; i < _board.Length; ++i)
-        {
-            if (i is 5 or 6 or 9 or 10)
-                continue;
-            destination[moveCount++] = i;
-        }
-
-        return moveCount;
-    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     [DoesNotReturn]
