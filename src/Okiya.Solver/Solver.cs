@@ -21,21 +21,21 @@ public sealed class Solver
         _currentNode = rootNode;
     }
 
-    public static Solver Create(int[] board)
-    {
-        ArgumentNullException.ThrowIfNull(board);
-        if (board.Length < Constants.CardCount)
-            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
+    public static Solver Create(int[] board) => new(Game.Create(board), new());
 
-        return new(new(board), new());
+    public static Solver Create(Game<int[]> game)
+    {
+        if (!game.IsValid)
+            throw new ArgumentException("Game instance must be valid.", nameof(game));
+
+        return new(game, new());
     }
 
     public static Solver Create(
-        int[] board, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCardIndex = default)
+        Game<int[]> game, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCardIndex = default)
     {
-        ArgumentNullException.ThrowIfNull(board);
-        if (board.Length < Constants.CardCount)
-            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
+        if (!game.IsValid)
+            throw new ArgumentException("Game instance must be valid.", nameof(game));
         uint firstPlayerTokensChecked = (uint)firstPlayerTokens;
         if (firstPlayerTokensChecked > Constants.PlayerTokensMask)
             throw new ArgumentOutOfRangeException(nameof(firstPlayerTokens));
@@ -51,7 +51,7 @@ public sealed class Solver
 
         var rootNode = Node.CreateUnchecked(
             firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCardIndex);
-        return new(new(board), rootNode);
+        return new(game, rootNode);
     }
 
     public bool TrySelectMove(out int move, out double score)
