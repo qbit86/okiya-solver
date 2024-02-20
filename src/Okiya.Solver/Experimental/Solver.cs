@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -53,19 +54,64 @@ public sealed class Solver
 
     public bool TrySelectMove(out int move, out double score)
     {
-        if (IsTerminalNode(_currentNode, out double relativeScore))
-        {
-            int sign = Sign(_currentNode.GetSideToMove());
-            score = sign * relativeScore;
-            return None(out move);
-        }
-
-        throw new NotImplementedException();
+        bool result = TrySelectMoveCore(out move, out double relativeScore);
+        int sign = Sign(_currentNode.GetSideToMove());
+        score = sign * relativeScore;
+        return result;
     }
 
-    private static bool IsTerminalNode(Node node, out double score)
+    private bool TrySelectMoveCore(out int move, out double score)
+    {
+        if (IsTerminalRoot(_currentNode, out score))
+            return None(-1, out move);
+
+        int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
+        try
+        {
+            int possibleMoveCount = PopulatePossibleMoves(_currentNode, buffer);
+            if (possibleMoveCount is 0)
+            {
+                int tokenCount = _currentNode.GetTokenCount();
+                score = -sbyte.MaxValue + tokenCount;
+                return None(-1, out move);
+            }
+
+            ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
+            double bestScore = double.NegativeInfinity;
+            int bestMove = -1;
+            foreach (int moveCandidate in possibleMoves)
+            {
+                Node child = _currentNode.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                double scoreCandidate = -Negamax(child);
+                if (scoreCandidate > bestScore)
+                {
+                    bestScore = scoreCandidate;
+                    bestMove = moveCandidate;
+                }
+            }
+
+            score = bestScore;
+            move = bestMove;
+            return true;
+        }
+        finally
+        {
+            ArrayPool<int>.Shared.Return(buffer);
+        }
+    }
+
+    private static double Negamax(Node node) => throw new NotImplementedException();
+
+    private static bool IsTerminalRoot(Node node, out double score)
     {
         (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
+        if (RuleHelpers.IsWinning(playerTokens))
+        {
+            double tokenCount = node.GetTokenCount();
+            score = sbyte.MaxValue - tokenCount;
+            return true;
+        }
+
         if (RuleHelpers.IsWinning(opponentTokens))
         {
             double tokenCount = node.GetTokenCount();
@@ -73,7 +119,23 @@ public sealed class Solver
             return true;
         }
 
+        if (node.IsFull())
+            return Some(0.0, out score);
+
+        score = double.NaN;
+        return false;
+    }
+
+    private static bool IsTerminalNode(Node node, out double score)
+    {
+        (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
         Debug.Assert(RuleHelpers.IsNotWinning(playerTokens));
+        if (RuleHelpers.IsWinning(opponentTokens))
+        {
+            double tokenCount = node.GetTokenCount();
+            score = -sbyte.MaxValue + tokenCount;
+            return true;
+        }
 
         if (node.IsFull())
             return Some(0.0, out score);
@@ -84,6 +146,40 @@ public sealed class Solver
 
     private static int Sign(int sideToMove) =>
         sideToMove switch { 0 => 1, 1 => -1, _ => ThrowUnreachableException() };
+
+    private int PopulatePossibleMoves(Node node, Span<int> destination)
+    {
+        if (!node.TryGetCard(out int lastCard))
+            return PopulatePossibleFirstMoves(destination);
+        Int32CardConcept c = Int32CardConcept.Instance;
+        int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
+        int moveCount = 0;
+        for (int i = 0; i < _board.Length; ++i)
+        {
+            int mask = 1 << i;
+            if ((tokensPlayed & mask) is not 0)
+                continue;
+            int candidateCard = _board[i];
+            if (c.Rank(candidateCard) != c.Rank(lastCard) && c.Suit(candidateCard) != c.Suit(lastCard))
+                continue;
+            destination[moveCount++] = i;
+        }
+
+        return moveCount;
+    }
+
+    private int PopulatePossibleFirstMoves(Span<int> destination)
+    {
+        int moveCount = 0;
+        for (int i = 0; i < _board.Length; ++i)
+        {
+            if (i is 5 or 6 or 9 or 10)
+                continue;
+            destination[moveCount++] = i;
+        }
+
+        return moveCount;
+    }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     [DoesNotReturn]
