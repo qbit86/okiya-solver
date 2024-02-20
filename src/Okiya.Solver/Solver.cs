@@ -12,14 +12,12 @@ namespace Okiya;
 
 public sealed class Solver
 {
-    private readonly int[] _board;
     private readonly Game<int[]> _game;
     private Node _currentNode;
 
-    private Solver(Game<int[]> game, int[] board, Node rootNode)
+    private Solver(Game<int[]> game, Node rootNode)
     {
         _game = game;
-        _board = board;
         _currentNode = rootNode;
     }
 
@@ -29,7 +27,7 @@ public sealed class Solver
         if (board.Length < Constants.CardCount)
             throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
 
-        return new(new(board), board, new());
+        return new(new(board), new());
     }
 
     public static Solver Create(
@@ -53,7 +51,7 @@ public sealed class Solver
 
         var rootNode = Node.CreateUnchecked(
             firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCardIndex);
-        return new(new(board), board, rootNode);
+        return new(new(board), rootNode);
     }
 
     public bool TrySelectMove(out int move, out double score)
@@ -115,7 +113,7 @@ public sealed class Solver
         if (Game.IsTerminalRoot(_currentNode, out score))
             return None(-1, out move);
 
-        int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
+        int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
             int possibleMoveCount = _game.PopulatePossibleMoves(_currentNode, buffer);
@@ -155,7 +153,7 @@ public sealed class Solver
         if (Game.IsTerminalNode(node, out double score))
             return score;
 
-        int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
+        int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
             int possibleMoveCount = _game.PopulatePossibleMoves(node, buffer);

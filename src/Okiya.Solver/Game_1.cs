@@ -25,7 +25,8 @@ public readonly record struct Game<TCardCollection>
         Int32CardConcept c = Int32CardConcept.Instance;
         int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
         int moveCount = 0;
-        for (int i = 0; i < Constants.CardCount; ++i)
+        int maxMoveCount = int.Min(destination.Length, Constants.CardCount);
+        for (int i = 0; i < maxMoveCount; ++i)
         {
             int mask = 1 << i;
             if ((tokensPlayed & mask) is not 0)
