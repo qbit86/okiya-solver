@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -58,6 +59,34 @@ public sealed class Solver
         int sign = Sign(_currentNode.GetSideToMove());
         score = sign * relativeScore;
         return result;
+    }
+
+    private bool TryMakeMove(out int move, out double score)
+    {
+        bool result = TrySelectMoveCore(out move, out double relativeScore);
+        int sign = Sign(_currentNode.GetSideToMove());
+        score = sign * relativeScore;
+        if (result)
+            _currentNode.AddPlayerToken(move, _board[move]);
+
+        return result;
+    }
+
+    public double MakeMoves<TCollection>(TCollection moves)
+        where TCollection : ICollection<int>
+    {
+        if (TryMakeMove(out int firstMove, out double firstScore))
+            moves.Add(firstMove);
+        else
+            return firstScore;
+
+        while (TryMakeMove(out int move, out double score))
+        {
+            Debug.Assert(firstScore.Equals(score));
+            moves.Add(move);
+        }
+
+        return firstScore;
     }
 
     private bool TrySelectMoveCore(out int move, out double score)
