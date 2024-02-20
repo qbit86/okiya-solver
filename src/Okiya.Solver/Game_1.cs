@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Okiya;
 
@@ -8,7 +9,11 @@ public readonly record struct Game<TCardCollection>
 {
     private readonly TCardCollection _board;
 
-    internal Game(TCardCollection board) => _board = board;
+    internal Game(TCardCollection board)
+    {
+        Debug.Assert(board.Count >= Constants.CardCount);
+        _board = board;
+    }
 
     internal bool IsValid => _board is not null;
 
@@ -20,7 +25,7 @@ public readonly record struct Game<TCardCollection>
         Int32CardConcept c = Int32CardConcept.Instance;
         int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
         int moveCount = 0;
-        for (int i = 0; i < _board.Count; ++i)
+        for (int i = 0; i < Constants.CardCount; ++i)
         {
             int mask = 1 << i;
             if ((tokensPlayed & mask) is not 0)

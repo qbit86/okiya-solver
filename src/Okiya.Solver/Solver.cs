@@ -112,7 +112,7 @@ public sealed class Solver
 
     private bool TrySelectMoveCore(out int move, out double score)
     {
-        if (IsTerminalRoot(_currentNode, out score))
+        if (Game.IsTerminalRoot(_currentNode, out score))
             return None(-1, out move);
 
         int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
@@ -152,7 +152,7 @@ public sealed class Solver
 
     private double Negamax(Node node)
     {
-        if (IsTerminalNode(node, out double score))
+        if (Game.IsTerminalNode(node, out double score))
             return score;
 
         int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
@@ -181,36 +181,6 @@ public sealed class Solver
         {
             ArrayPool<int>.Shared.Return(buffer);
         }
-    }
-
-    private static bool IsTerminalRoot(Node node, out double score)
-    {
-        (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
-        if (RuleHelpers.IsWinning(playerTokens))
-            return Some(sbyte.MaxValue - node.GetTokenCount(), out score);
-
-        if (RuleHelpers.IsWinning(opponentTokens))
-            return Some(-sbyte.MaxValue + node.GetTokenCount(), out score);
-
-        if (node.IsFull())
-            return Some(0.0, out score);
-
-        score = double.NaN;
-        return false;
-    }
-
-    private static bool IsTerminalNode(Node node, out double score)
-    {
-        (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
-        Debug.Assert(RuleHelpers.IsNotWinning(playerTokens));
-        if (RuleHelpers.IsWinning(opponentTokens))
-            return Some(-sbyte.MaxValue + node.GetTokenCount(), out score);
-
-        if (node.IsFull())
-            return Some(0.0, out score);
-
-        score = double.NaN;
-        return false;
     }
 
     private static int Sign(int sideToMove) =>
