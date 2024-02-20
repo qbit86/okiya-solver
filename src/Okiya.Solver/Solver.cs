@@ -31,7 +31,7 @@ public sealed class Solver
     }
 
     public static Solver Create(
-        int[] board, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCard = default)
+        int[] board, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCardIndex = default)
     {
         ArgumentNullException.ThrowIfNull(board);
         if (board.Length < Constants.CardCount)
@@ -46,10 +46,11 @@ public sealed class Solver
             throw new ArgumentException("Players' tokens may not overlap.", nameof(secondPlayerTokens));
         if (sideToMove is not (0 or 1))
             throw new ArgumentOutOfRangeException(nameof(sideToMove));
-        if ((uint)lastCard >= Constants.CardCount)
-            throw new ArgumentOutOfRangeException(nameof(lastCard));
+        if ((uint)lastCardIndex >= Constants.CardCount)
+            throw new ArgumentOutOfRangeException(nameof(lastCardIndex));
 
-        var rootNode = Node.CreateUnchecked(firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCard);
+        var rootNode = Node.CreateUnchecked(
+            firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCardIndex);
         return new(board, rootNode);
     }
 
@@ -67,7 +68,7 @@ public sealed class Solver
         int sign = Sign(_currentNode.GetSideToMove());
         score = sign * relativeScore;
         if (result)
-            _currentNode = _currentNode.AddPlayerToken(move, _board[move]);
+            _currentNode = _currentNode.AddPlayerToken(move);
 
         return result;
     }
@@ -128,7 +129,7 @@ public sealed class Solver
             int bestMove = -1;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = _currentNode.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                Node child = _currentNode.AddPlayerToken(moveCandidate);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                 {
@@ -166,7 +167,7 @@ public sealed class Solver
             double bestScore = double.NegativeInfinity;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = node.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                Node child = node.AddPlayerToken(moveCandidate);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                     bestScore = scoreCandidate;
@@ -215,8 +216,9 @@ public sealed class Solver
 
     private int PopulatePossibleMoves(Node node, Span<int> destination)
     {
-        if (!node.TryGetCard(out int lastCard))
+        if (!node.TryGetCardIndex(out int lastCardIndex))
             return PopulatePossibleFirstMoves(destination);
+        int lastCard = _board[lastCardIndex];
         Int32CardConcept c = Int32CardConcept.Instance;
         int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
         int moveCount = 0;
