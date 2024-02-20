@@ -10,6 +10,7 @@ namespace Okiya;
 
 // https://en.wikipedia.org/wiki/Negamax
 
+[Obsolete("Use Okiya.Experimental.Solver instead.")]
 public sealed class Solver
 {
     private readonly int[] _board;
