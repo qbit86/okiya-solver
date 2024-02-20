@@ -13,7 +13,7 @@ namespace Okiya.Experimental;
 public sealed class Solver
 {
     private readonly int[] _board;
-    private readonly Node _currentNode;
+    private Node _currentNode;
 
     private Solver(int[] board, Node rootNode)
     {
@@ -67,19 +67,37 @@ public sealed class Solver
         int sign = Sign(_currentNode.GetSideToMove());
         score = sign * relativeScore;
         if (result)
-            _currentNode.AddPlayerToken(move, _board[move]);
+            _currentNode = _currentNode.AddPlayerToken(move, _board[move]);
 
         return result;
+    }
+
+    public double MakeMoves(Span<int> moves, out int movesWritten)
+    {
+        movesWritten = 0;
+        if (!TryMakeMove(out int firstMove, out double firstScore) || moves.IsEmpty)
+            return firstScore;
+
+        moves[movesWritten++] = firstMove;
+        while (movesWritten < moves.Length && TryMakeMove(out int move, out double score))
+        {
+            Debug.Assert(firstScore.Equals(score));
+            moves[movesWritten++] = move;
+        }
+
+        return firstScore;
     }
 
     public double MakeMoves<TCollection>(TCollection moves)
         where TCollection : ICollection<int>
     {
-        if (TryMakeMove(out int firstMove, out double firstScore))
-            moves.Add(firstMove);
-        else
+        if (moves is null)
+            throw new ArgumentNullException(nameof(moves));
+
+        if (!TryMakeMove(out int firstMove, out double firstScore))
             return firstScore;
 
+        moves.Add(firstMove);
         while (TryMakeMove(out int move, out double score))
         {
             Debug.Assert(firstScore.Equals(score));
@@ -166,18 +184,10 @@ public sealed class Solver
     {
         (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
         if (RuleHelpers.IsWinning(playerTokens))
-        {
-            double tokenCount = node.GetTokenCount();
-            score = sbyte.MaxValue - tokenCount;
-            return true;
-        }
+            return Some(sbyte.MaxValue - node.GetTokenCount(), out score);
 
         if (RuleHelpers.IsWinning(opponentTokens))
-        {
-            double tokenCount = node.GetTokenCount();
-            score = -sbyte.MaxValue + tokenCount;
-            return true;
-        }
+            return Some(-sbyte.MaxValue + node.GetTokenCount(), out score);
 
         if (node.IsFull())
             return Some(0.0, out score);
@@ -191,11 +201,7 @@ public sealed class Solver
         (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
         Debug.Assert(RuleHelpers.IsNotWinning(playerTokens));
         if (RuleHelpers.IsWinning(opponentTokens))
-        {
-            double tokenCount = node.GetTokenCount();
-            score = -sbyte.MaxValue + tokenCount;
-            return true;
-        }
+            return Some(-sbyte.MaxValue + node.GetTokenCount(), out score);
 
         if (node.IsFull())
             return Some(0.0, out score);
