@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
+using static Okiya.TryHelpers;
 
 namespace Okiya;
 
@@ -65,6 +66,8 @@ public readonly record struct Node
 
     private int GetSecondPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
 
+    private uint GetAllTokens() => _playersTokens | (_playersTokens >> PlayerTokensBitCount);
+
     private int GetCardIndexOrDefault() => unchecked((int)(_cardIndexAndSideToMove & CardIndexMask));
 
     internal bool TryGetCardIndex(out int cardIndex)
@@ -82,22 +85,55 @@ public readonly record struct Node
         return GetSideToMove() is 0 ? (firstPlayerTokens, secondPlayerTokens) : (secondPlayerTokens, firstPlayerTokens);
     }
 
-    internal Node AddPlayerToken(int index) =>
-        GetSideToMove() is 0 ? AddFirstPlayerToken(index) : AddSecondPlayerToken(index);
+    internal Node AddPlayerTokenUnchecked(int index) =>
+        GetSideToMove() is 0 ? AddFirstPlayerTokenUnchecked(index) : AddSecondPlayerTokenUnchecked(index);
 
-    private Node AddFirstPlayerToken(int index)
+    internal bool TryAddPlayerToken(int index, out Node child) =>
+        GetSideToMove() is 0 ? TryAddFirstPlayerToken(index, out child) : TryAddSecondPlayerToken(index, out child);
+
+    private Node AddFirstPlayerTokenUnchecked(int index)
     {
+        Debug.Assert(unchecked((uint)index < Constants.CardCount));
         uint playerTokenMask = 1u << index;
+        Debug.Assert((GetAllTokens() & playerTokenMask) is 0);
         uint playersTokens = _playersTokens | playerTokenMask;
         uint cardIndexAndSideToMove = unchecked((1u << CardIndexBitCount) | (uint)index);
         return new(playersTokens, cardIndexAndSideToMove);
     }
 
-    private Node AddSecondPlayerToken(int index)
+    private Node AddSecondPlayerTokenUnchecked(int index)
     {
+        Debug.Assert(unchecked((uint)index < Constants.CardCount));
         uint playerTokenMask = 1u << index;
+        Debug.Assert((GetAllTokens() & playerTokenMask) is 0);
         uint playersTokens = _playersTokens | (playerTokenMask << PlayerTokensBitCount);
         uint cardIndexAndSideToMove = unchecked((uint)index);
         return new(playersTokens, cardIndexAndSideToMove);
+    }
+
+    private bool TryAddFirstPlayerToken(int index, out Node child)
+    {
+        if (unchecked((uint)index >= Constants.CardCount))
+            return None(this, out child);
+        uint playerTokenMask = 1u << index;
+        if ((GetAllTokens() & playerTokenMask) is not 0)
+            return None(this, out child);
+        uint playersTokens = _playersTokens | playerTokenMask;
+        uint cardIndexAndSideToMove = unchecked((1u << CardIndexBitCount) | (uint)index);
+        child = new(playersTokens, cardIndexAndSideToMove);
+        return true;
+    }
+
+    private bool TryAddSecondPlayerToken(int index, out Node child)
+    {
+        if (unchecked((uint)index >= Constants.CardCount))
+            return None(this, out child);
+        uint playerTokenMask = 1u << index;
+        if ((GetAllTokens() & playerTokenMask) is not 0)
+            return None(this, out child);
+        uint playersTokens = _playersTokens | (playerTokenMask << PlayerTokensBitCount);
+        uint cardIndexAndSideToMove = unchecked((uint)index);
+        child = new(playersTokens, cardIndexAndSideToMove);
+        return true;
     }
 }

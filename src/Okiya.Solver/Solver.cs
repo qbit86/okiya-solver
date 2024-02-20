@@ -68,7 +68,7 @@ public sealed class Solver
         int sign = Sign(_currentNode.GetSideToMove());
         score = sign * relativeScore;
         if (result)
-            _currentNode = _currentNode.AddPlayerToken(move);
+            _currentNode = _currentNode.AddPlayerTokenUnchecked(move);
 
         return result;
     }
@@ -129,7 +129,7 @@ public sealed class Solver
             int bestMove = -1;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = _currentNode.AddPlayerToken(moveCandidate);
+                Node child = _currentNode.AddPlayerTokenUnchecked(moveCandidate);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                 {
@@ -167,7 +167,7 @@ public sealed class Solver
             double bestScore = double.NegativeInfinity;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = node.AddPlayerToken(moveCandidate);
+                Node child = node.AddPlayerTokenUnchecked(moveCandidate);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                     bestScore = scoreCandidate;
