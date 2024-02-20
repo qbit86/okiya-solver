@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define OKIYA_PLAYOUT
+
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,23 +17,21 @@ internal static class Program
 
     private static void Main()
     {
-        const int seed = 42;
+        const int seed = 1729;
         Random random = new(seed);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         random.Shuffle(cards);
         var stopwatch = Stopwatch.StartNew();
-#if true
-        /*
-        Solver solver = new(cards);
-        Span<int> buffer = stackalloc int[cards.Length];
-        double evaluation = solver.Solve(buffer, out int moveCount);
-        ReadOnlySpan<int> moves = buffer[..moveCount];
-        /*/
+#if OKIYA_PLAYOUT
         var solver = Experimental.Solver.Create(cards);
+        /*
         bool hasMove = solver.TrySelectMove(out int move, out double evaluation);
         if (hasMove)
             Console.WriteLine($"{nameof(move)}: {move}\t{Int32CardConcept.Instance.ToString(cards[move])}");
-        //*/
+        */
+        Span<int> buffer = stackalloc int[cards.Length];
+        double evaluation = solver.MakeMoves(buffer, out int moveCount);
+        ReadOnlySpan<int> moves = buffer[..moveCount];
 #else
         const double evaluation = -2147483634.0;
         ReadOnlySpan<int> moves = stackalloc int[] { 0, 3, 2, 1, 5, 10, 4, 9, 6, 15, 11, 13, 12, 7 };
@@ -40,7 +40,7 @@ internal static class Program
         stopwatch.Stop();
         Console.WriteLine($"Finished in {stopwatch.Elapsed}");
         Console.WriteLine(Invariant($"{nameof(evaluation)}: {evaluation}"));
-#if false
+#if OKIYA_PLAYOUT
         Console.WriteLine(Invariant($"{nameof(moveCount)}: {moveCount}"));
         Console.WriteLine($"{nameof(moves)}:");
         ReadOnlySpan<int>.Enumerator enumerator = moves.GetEnumerator();
