@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -8,7 +7,7 @@ using System.Diagnostics;
 
 namespace Okiya;
 
-internal readonly record struct Node
+public readonly record struct Node
 {
     private const int PlayerTokensBitCount = 16;
 
@@ -84,14 +83,6 @@ internal readonly record struct Node
         int firstPlayerTokens = GetFirstPlayerTokens();
         int secondPlayerTokens = GetSecondPlayerTokens();
         return GetSideToMove() is 0 ? (firstPlayerTokens, secondPlayerTokens) : (secondPlayerTokens, firstPlayerTokens);
-    }
-
-    [Obsolete("Use GetPlayersTokens() instead.")]
-    internal (int SideToMove, int PlayerTokens) GetSideToMoveAndPlayerTokens()
-    {
-        int sideToMove = GetSideToMove();
-        int playerTokens = GetPlayerTokens(sideToMove);
-        return (sideToMove, playerTokens);
     }
 
     internal Node AddPlayerToken(int index, int card) =>
