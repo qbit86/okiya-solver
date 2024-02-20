@@ -108,10 +108,10 @@ public sealed class Solver
         int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
         try
         {
-            int possibleMoveCount = PopulatePossibleMoves(_currentNode, buffer);
+            int possibleMoveCount = PopulatePossibleMoves(node, buffer);
             if (possibleMoveCount is 0)
             {
-                int tokenCount = _currentNode.GetTokenCount();
+                int tokenCount = node.GetTokenCount();
                 return -sbyte.MaxValue + tokenCount;
             }
 
@@ -119,7 +119,7 @@ public sealed class Solver
             double bestScore = double.NegativeInfinity;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = _currentNode.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                Node child = node.AddPlayerToken(moveCandidate, _board[moveCandidate]);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                     bestScore = scoreCandidate;
