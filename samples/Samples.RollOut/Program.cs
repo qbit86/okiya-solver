@@ -23,7 +23,7 @@ internal static class Program
         random.Shuffle(cards);
         var stopwatch = Stopwatch.StartNew();
 #if OKIYA_PLAYOUT
-        var solver = Experimental.Solver.Create(cards);
+        var solver = Solver.Create(cards);
         /*
         bool hasMove = solver.TrySelectMove(out int move, out double evaluation);
         if (hasMove)

@@ -1,59 +1,156 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using static Okiya.TryHelpers;
 
 namespace Okiya;
 
 // https://en.wikipedia.org/wiki/Negamax
 
-[Obsolete("Use Okiya.Experimental.Solver instead.")]
 public sealed class Solver
 {
     private readonly int[] _board;
+    private Node _currentNode;
 
-    public Solver(int[] board)
+    private Solver(int[] board, Node rootNode)
     {
-        ArgumentNullException.ThrowIfNull(board);
         _board = board;
+        _currentNode = rootNode;
     }
 
-    public override string ToString() => string.Join(' ', _board.Select(Int32CardConcept.Instance.ToString));
-
-    public double Solve(Span<int> moves, out int movesWritten)
+    public static Solver Create(int[] board)
     {
-        double result = Solve(new(), out ImmutableStack<int> moveStack);
-        ImmutableStack<int>.Enumerator enumerator = moveStack.GetEnumerator();
-        for (movesWritten = 0; movesWritten < moves.Length && enumerator.MoveNext(); ++movesWritten)
-            moves[movesWritten] = enumerator.Current;
+        ArgumentNullException.ThrowIfNull(board);
+        if (board.Length < Constants.CardCount)
+            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
+
+        return new(board, new());
+    }
+
+    public static Solver Create(
+        int[] board, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCard = default)
+    {
+        ArgumentNullException.ThrowIfNull(board);
+        if (board.Length < Constants.CardCount)
+            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
+        uint firstPlayerTokensChecked = (uint)firstPlayerTokens;
+        if (firstPlayerTokensChecked > Constants.PlayerTokensMask)
+            throw new ArgumentOutOfRangeException(nameof(firstPlayerTokens));
+        uint secondPlayerTokensChecked = (uint)secondPlayerTokens;
+        if (secondPlayerTokensChecked > Constants.PlayerTokensMask)
+            throw new ArgumentOutOfRangeException(nameof(secondPlayerTokens));
+        if ((firstPlayerTokensChecked & secondPlayerTokensChecked) is not 0)
+            throw new ArgumentException("Players' tokens may not overlap.", nameof(secondPlayerTokens));
+        if (sideToMove is not (0 or 1))
+            throw new ArgumentOutOfRangeException(nameof(sideToMove));
+        if ((uint)lastCard >= Constants.CardCount)
+            throw new ArgumentOutOfRangeException(nameof(lastCard));
+
+        var rootNode = Node.CreateUnchecked(firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCard);
+        return new(board, rootNode);
+    }
+
+    public bool TrySelectMove(out int move, out double score)
+    {
+        bool result = TrySelectMoveCore(out move, out double relativeScore);
+        int sign = Sign(_currentNode.GetSideToMove());
+        score = sign * relativeScore;
         return result;
     }
 
-    public double Solve<TMoveCollection>(TMoveCollection moves)
-        where TMoveCollection : ICollection<int>
+    private bool TryMakeMove(out int move, out double score)
+    {
+        bool result = TrySelectMoveCore(out move, out double relativeScore);
+        int sign = Sign(_currentNode.GetSideToMove());
+        score = sign * relativeScore;
+        if (result)
+            _currentNode = _currentNode.AddPlayerToken(move, _board[move]);
+
+        return result;
+    }
+
+    public double MakeMoves(Span<int> moves, out int movesWritten)
+    {
+        movesWritten = 0;
+        if (!TryMakeMove(out int firstMove, out double firstScore) || moves.IsEmpty)
+            return firstScore;
+
+        moves[movesWritten++] = firstMove;
+        while (movesWritten < moves.Length && TryMakeMove(out int move, out double score))
+        {
+            Debug.Assert(firstScore.Equals(score));
+            moves[movesWritten++] = move;
+        }
+
+        return firstScore;
+    }
+
+    public double MakeMoves<TCollection>(TCollection moves)
+        where TCollection : ICollection<int>
     {
         if (moves is null)
             throw new ArgumentNullException(nameof(moves));
-        double result = Solve(new(), out ImmutableStack<int> moveStack);
-        foreach (int move in moveStack)
+
+        if (!TryMakeMove(out int firstMove, out double firstScore))
+            return firstScore;
+
+        moves.Add(firstMove);
+        while (TryMakeMove(out int move, out double score))
+        {
+            Debug.Assert(firstScore.Equals(score));
             moves.Add(move);
-        return result;
+        }
+
+        return firstScore;
     }
 
-    private double Solve(Node rootNode, out ImmutableStack<int> moves) =>
-        Negamax(rootNode, ImmutableStack<int>.Empty, out moves);
-
-    private double Negamax(Node node, ImmutableStack<int> inputStack,
-        out ImmutableStack<int> outputStack)
+    private bool TrySelectMoveCore(out int move, out double score)
     {
-        if (IsTerminalNode(node, out double evaluation))
+        if (IsTerminalRoot(_currentNode, out score))
+            return None(-1, out move);
+
+        int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
+        try
         {
-            outputStack = inputStack;
-            return evaluation;
+            int possibleMoveCount = PopulatePossibleMoves(_currentNode, buffer);
+            if (possibleMoveCount is 0)
+            {
+                int tokenCount = _currentNode.GetTokenCount();
+                score = -sbyte.MaxValue + tokenCount;
+                return None(-1, out move);
+            }
+
+            ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
+            double bestScore = double.NegativeInfinity;
+            int bestMove = -1;
+            foreach (int moveCandidate in possibleMoves)
+            {
+                Node child = _currentNode.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                double scoreCandidate = -Negamax(child);
+                if (scoreCandidate > bestScore)
+                {
+                    bestScore = scoreCandidate;
+                    bestMove = moveCandidate;
+                }
+            }
+
+            score = bestScore;
+            move = bestMove;
+            return true;
         }
+        finally
+        {
+            ArrayPool<int>.Shared.Return(buffer);
+        }
+    }
+
+    private double Negamax(Node node)
+    {
+        if (IsTerminalNode(node, out double score))
+            return score;
 
         int[] buffer = ArrayPool<int>.Shared.Rent(_board.Length);
         try
@@ -62,34 +159,59 @@ public sealed class Solver
             if (possibleMoveCount is 0)
             {
                 int tokenCount = node.GetTokenCount();
-                outputStack = inputStack;
-                return node.GetSideToMove() is 0 ? int.MinValue + tokenCount : int.MaxValue - tokenCount;
+                return -sbyte.MaxValue + tokenCount;
             }
 
             ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
-            double bestEvaluation = double.NegativeInfinity;
-            int bestMove = int.MinValue;
-            ImmutableStack<int> bestMoveStack = ImmutableStack<int>.Empty;
-            foreach (int move in possibleMoves)
+            double bestScore = double.NegativeInfinity;
+            foreach (int moveCandidate in possibleMoves)
             {
-                Node child = node.AddPlayerToken(move, _board[move]);
-                double candidateEvaluation = -Negamax(child, inputStack, out ImmutableStack<int> candidateMoveStack);
-                if (candidateEvaluation > bestEvaluation)
-                {
-                    bestEvaluation = candidateEvaluation;
-                    bestMove = move;
-                    bestMoveStack = candidateMoveStack;
-                }
+                Node child = node.AddPlayerToken(moveCandidate, _board[moveCandidate]);
+                double scoreCandidate = -Negamax(child);
+                if (scoreCandidate > bestScore)
+                    bestScore = scoreCandidate;
             }
 
-            outputStack = bestMoveStack.Push(bestMove);
-            return bestEvaluation;
+            return bestScore;
         }
         finally
         {
             ArrayPool<int>.Shared.Return(buffer);
         }
     }
+
+    private static bool IsTerminalRoot(Node node, out double score)
+    {
+        (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
+        if (RuleHelpers.IsWinning(playerTokens))
+            return Some(sbyte.MaxValue - node.GetTokenCount(), out score);
+
+        if (RuleHelpers.IsWinning(opponentTokens))
+            return Some(-sbyte.MaxValue + node.GetTokenCount(), out score);
+
+        if (node.IsFull())
+            return Some(0.0, out score);
+
+        score = double.NaN;
+        return false;
+    }
+
+    private static bool IsTerminalNode(Node node, out double score)
+    {
+        (int playerTokens, int opponentTokens) = node.GetPlayersTokens();
+        Debug.Assert(RuleHelpers.IsNotWinning(playerTokens));
+        if (RuleHelpers.IsWinning(opponentTokens))
+            return Some(-sbyte.MaxValue + node.GetTokenCount(), out score);
+
+        if (node.IsFull())
+            return Some(0.0, out score);
+
+        score = double.NaN;
+        return false;
+    }
+
+    private static int Sign(int sideToMove) =>
+        sideToMove switch { 0 => 1, 1 => -1, _ => ThrowUnreachableException() };
 
     private int PopulatePossibleMoves(Node node, Span<int> destination)
     {
@@ -125,24 +247,7 @@ public sealed class Solver
         return moveCount;
     }
 
-    private static bool IsTerminalNode(Node node, out double evaluation)
-    {
-        (int sideToMove, int playerTokens) = node.GetSideToMoveAndPlayerTokens();
-        int opponent = (sideToMove ^ 1) & 1;
-        int opponentTokens = node.GetPlayerTokens(opponent);
-        if (RuleHelpers.IsWinning(opponentTokens))
-        {
-            double tokenCount = node.GetTokenCount();
-            evaluation = sideToMove is 0 ? int.MinValue - tokenCount : int.MaxValue + tokenCount;
-            return true;
-        }
-
-        Debug.Assert(RuleHelpers.IsNotWinning(playerTokens));
-
-        if (node.IsFull())
-            return Some(0.0, out evaluation);
-
-        evaluation = double.NaN;
-        return false;
-    }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    private static int ThrowUnreachableException() => throw new UnreachableException();
 }
