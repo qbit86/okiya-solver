@@ -38,7 +38,9 @@ public readonly record struct Game<TCardCollection>
         return child;
     }
 
+#pragma warning disable CA1822
     internal Node MakeMoveUnchecked(Node node, int move)
+#pragma warning restore CA1822
     {
         Debug.Assert(unchecked((uint)move < Constants.CardCount));
 #if DEBUG

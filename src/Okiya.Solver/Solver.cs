@@ -26,7 +26,7 @@ public sealed class Solver
     public static Solver Create(Game<int[]> game)
     {
         if (!game.IsValid)
-            throw new ArgumentException("Game instance must be valid.", nameof(game));
+            throw new ArgumentException("Game instance is not initialized.", nameof(game));
 
         return new(game, new());
     }
@@ -68,7 +68,7 @@ public sealed class Solver
         int sign = Sign(_currentNode.GetSideToMove());
         score = sign * relativeScore;
         if (result)
-            _currentNode = _currentNode.AddPlayerTokenUnchecked(move);
+            _currentNode = _game.MakeMoveUnchecked(_currentNode, move);
 
         return result;
     }
@@ -119,8 +119,7 @@ public sealed class Solver
             int possibleMoveCount = _game.PopulatePossibleMoves(_currentNode, buffer);
             if (possibleMoveCount is 0)
             {
-                int tokenCount = _currentNode.GetTokenCount();
-                score = -sbyte.MaxValue + tokenCount;
+                score = -sbyte.MaxValue + _currentNode.GetTokenCount();
                 return None(-1, out move);
             }
 
@@ -129,7 +128,7 @@ public sealed class Solver
             int bestMove = -1;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = _currentNode.AddPlayerTokenUnchecked(moveCandidate);
+                Node child = _game.MakeMoveUnchecked(_currentNode, moveCandidate);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                 {
@@ -158,10 +157,7 @@ public sealed class Solver
         {
             int possibleMoveCount = _game.PopulatePossibleMoves(node, buffer);
             if (possibleMoveCount is 0)
-            {
-                int tokenCount = node.GetTokenCount();
-                return -sbyte.MaxValue + tokenCount;
-            }
+                return -sbyte.MaxValue + node.GetTokenCount();
 
             ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
             double bestScore = double.NegativeInfinity;
