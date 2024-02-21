@@ -85,11 +85,19 @@ public readonly record struct Node
         return GetSideToMove() is 0 ? (firstPlayerTokens, secondPlayerTokens) : (secondPlayerTokens, firstPlayerTokens);
     }
 
-    internal Node AddPlayerTokenUnchecked(int index) =>
-        GetSideToMove() is 0 ? AddFirstPlayerTokenUnchecked(index) : AddSecondPlayerTokenUnchecked(index);
+    internal Node AddPlayerTokenUnchecked(int index)
+    {
+        Debug.Assert(unchecked((uint)index < Constants.CardCount));
+        return GetSideToMove() is 0 ? AddFirstPlayerTokenUnchecked(index) : AddSecondPlayerTokenUnchecked(index);
+    }
 
-    internal bool TryAddPlayerToken(int index, out Node child) =>
-        GetSideToMove() is 0 ? TryAddFirstPlayerToken(index, out child) : TryAddSecondPlayerToken(index, out child);
+    internal bool TryAddPlayerToken(int index, out Node child)
+    {
+        Debug.Assert(unchecked((uint)index < Constants.CardCount));
+        return GetSideToMove() is 0
+            ? TryAddFirstPlayerToken(index, out child)
+            : TryAddSecondPlayerToken(index, out child);
+    }
 
     private Node AddFirstPlayerTokenUnchecked(int index)
     {
@@ -113,8 +121,7 @@ public readonly record struct Node
 
     private bool TryAddFirstPlayerToken(int index, out Node child)
     {
-        if (unchecked((uint)index >= Constants.CardCount))
-            return None(this, out child);
+        Debug.Assert(unchecked((uint)index < Constants.CardCount));
         uint playerTokenMask = 1u << index;
         if ((GetAllTokens() & playerTokenMask) is not 0)
             return None(this, out child);
@@ -126,8 +133,7 @@ public readonly record struct Node
 
     private bool TryAddSecondPlayerToken(int index, out Node child)
     {
-        if (unchecked((uint)index >= Constants.CardCount))
-            return None(this, out child);
+        Debug.Assert(unchecked((uint)index < Constants.CardCount));
         uint playerTokenMask = 1u << index;
         if ((GetAllTokens() & playerTokenMask) is not 0)
             return None(this, out child);
