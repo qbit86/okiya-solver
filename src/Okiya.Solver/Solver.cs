@@ -163,7 +163,7 @@ public sealed class Solver
             double bestScore = double.NegativeInfinity;
             foreach (int moveCandidate in possibleMoves)
             {
-                Node child = node.AddPlayerTokenUnchecked(moveCandidate);
+                Node child = _game.MakeMoveUnchecked(node, moveCandidate);
                 double scoreCandidate = -Negamax(child);
                 if (scoreCandidate > bestScore)
                     bestScore = scoreCandidate;
