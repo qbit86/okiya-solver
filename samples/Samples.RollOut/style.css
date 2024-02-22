@@ -2,7 +2,7 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
-span.suit0, span.suit1, span.suit2, span.suit3 {
+span.suit0, span.suit1, span.suit2, span.suit3, span.unavailable {
   border-radius: 5px;
   border-style: hidden;
   color: #eee8d5;
@@ -26,6 +26,12 @@ span.suit3 {
   background-color: #002b36;
 }
 
+span.unavailable {
+  background-color: #93a1a1;
+}
+
 table.board {
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
 }

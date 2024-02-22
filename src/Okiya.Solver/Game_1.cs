@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using static Okiya.TryHelpers;
@@ -8,15 +9,26 @@ namespace Okiya;
 public readonly record struct Game<TCardCollection>
     where TCardCollection : IReadOnlyList<int>
 {
-    private readonly TCardCollection _board;
+    private readonly TCardCollection _cards;
 
-    internal Game(TCardCollection board)
+    internal Game(TCardCollection cards)
     {
-        Debug.Assert(board.Count >= Constants.CardCount);
-        _board = board;
+        Debug.Assert(cards.Count >= Constants.CardCount);
+        _cards = cards;
     }
 
-    internal bool IsValid => _board is not null;
+    public bool IsValid => _cards is not null;
+
+    public bool TryGetCard(int index, out int card) =>
+        unchecked((uint)index < (uint)_cards.Count) ? Some(_cards[index], out card) : None(out card);
+
+    public int GetCard(int index)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _cards.Count);
+
+        return _cards[index];
+    }
 
     public Node MakeMove(Node node, int move)
     {
@@ -26,8 +38,8 @@ public readonly record struct Game<TCardCollection>
         if (node.TryGetCardIndex(out int cardIndex))
         {
             Int32CardConcept c = Int32CardConcept.Instance;
-            int lastCard = _board[cardIndex];
-            int newCard = _board[move];
+            int lastCard = _cards[cardIndex];
+            int newCard = _cards[move];
             if (c.Rank(newCard) != c.Rank(lastCard) && c.Suit(newCard) != c.Suit(lastCard))
                 throw new ArgumentException("Both rank and suit do not match the previous card.", nameof(move));
         }
@@ -38,7 +50,7 @@ public readonly record struct Game<TCardCollection>
         return child;
     }
 
-#pragma warning disable CA1822
+#pragma warning disable CA1822 // Mark members as static
     internal Node MakeMoveUnchecked(Node node, int move)
 #pragma warning restore CA1822
     {
@@ -47,8 +59,8 @@ public readonly record struct Game<TCardCollection>
         if (node.TryGetCardIndex(out int cardIndex))
         {
             Int32CardConcept c = Int32CardConcept.Instance;
-            int lastCard = _board[cardIndex];
-            int newCard = _board[move];
+            int lastCard = _cards[cardIndex];
+            int newCard = _cards[move];
             Debug.Assert(c.Rank(newCard) == c.Rank(lastCard) || c.Suit(newCard) == c.Suit(lastCard));
         }
 #endif
@@ -63,8 +75,8 @@ public readonly record struct Game<TCardCollection>
         if (node.TryGetCardIndex(out int cardIndex))
         {
             Int32CardConcept c = Int32CardConcept.Instance;
-            int lastCard = _board[cardIndex];
-            int newCard = _board[move];
+            int lastCard = _cards[cardIndex];
+            int newCard = _cards[move];
             if (c.Rank(newCard) != c.Rank(lastCard) && c.Suit(newCard) != c.Suit(lastCard))
                 return None(node, out child);
         }
@@ -72,11 +84,24 @@ public readonly record struct Game<TCardCollection>
         return node.TryAddPlayerToken(move, out child);
     }
 
+    public void PopulatePossibleMoves<TCollection>(Node node, TCollection moves)
+        where TCollection : ICollection<int>
+    {
+        if (moves is null)
+            throw new ArgumentNullException(nameof(moves));
+        int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
+        int moveCount = PopulatePossibleMoves(node, buffer.AsSpan());
+        Span<int> span = buffer.AsSpan(0, moveCount);
+        foreach (int move in span)
+            moves.Add(move);
+        ArrayPool<int>.Shared.Return(buffer);
+    }
+
     internal int PopulatePossibleMoves(Node node, Span<int> destination)
     {
         if (!node.TryGetCardIndex(out int lastCardIndex))
             return Game.PopulatePossibleFirstMoves(destination);
-        int lastCard = _board[lastCardIndex];
+        int lastCard = _cards[lastCardIndex];
         Int32CardConcept c = Int32CardConcept.Instance;
         int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
         int moveCount = 0;
@@ -86,7 +111,7 @@ public readonly record struct Game<TCardCollection>
             int mask = 1 << i;
             if ((tokensPlayed & mask) is not 0)
                 continue;
-            int candidateCard = _board[i];
+            int candidateCard = _cards[i];
             if (c.Rank(candidateCard) != c.Rank(lastCard) && c.Suit(candidateCard) != c.Suit(lastCard))
                 continue;
             destination[moveCount++] = i;

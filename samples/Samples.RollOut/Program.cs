@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,9 +21,10 @@ internal static class Program
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         random.Shuffle(cards);
         var stopwatch = Stopwatch.StartNew();
-#if true
         var game = Game.Create(cards);
-        var solver = Solver.Create(game);
+        Node rootNode = new();
+#if true
+        var solver = Solver.Create(game, rootNode);
         Span<int> buffer = stackalloc int[cards.Length];
         double evaluation = solver.MakeMoves(buffer, out int moveCount);
         ReadOnlySpan<int> moves = buffer[..moveCount];
@@ -37,10 +39,9 @@ internal static class Program
 
         Console.WriteLine(Invariant($"{nameof(moveCount)}: {moveCount}"));
         Console.WriteLine($"{nameof(moves)}:");
-        ReadOnlySpan<int>.Enumerator enumerator = moves.GetEnumerator();
-        for (int i = 0; enumerator.MoveNext(); ++i)
+        for (int i = 0; i < moves.Length; ++i)
         {
-            int move = enumerator.Current;
+            int move = moves[i];
             Console.WriteLine($"\t{i}.\t{move}\t{Int32CardConcept.Instance.ToString(cards[move])}");
         }
 
@@ -48,24 +49,17 @@ internal static class Program
 
         title.Add($"{nameof(Okiya)} - {seed}");
 
-        XElement boardTable = new("table", new XAttribute("class", "board"));
-        body.Add(boardTable);
-
-        const int columnCount = 4;
-        int rowCount = (cards.Length + columnCount - 1) / columnCount;
-        for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
         {
-            XElement tr = new("tr");
-            boardTable.Add(tr);
-            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex, ++cardIndex)
-            {
-                int card = cards[cardIndex];
-                string s = Int32CardConcept.Instance.ToString(card);
-                string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
-                XElement td = new("td");
-                tr.Add(td);
-                td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
-            }
+            XElement table = CreatePositionTable(game, rootNode);
+            body.Add(table);
+        }
+
+        Node currentNode = rootNode;
+        foreach (int move in moves)
+        {
+            currentNode = game.MakeMove(currentNode, move);
+            XElement table = CreatePositionTable(game, currentNode, true);
+            body.Add(table);
         }
 
         string outputDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
@@ -78,5 +72,69 @@ internal static class Program
         XmlWriterSettings settings = new() { Indent = true, OmitXmlDeclaration = true };
         using var writer = XmlWriter.Create(outputPath, settings);
         document.Save(writer);
+    }
+
+    private static XElement CreatePositionTable(Game<int[]> game, Node node, bool addVerticalSpace = false)
+    {
+        Debug.Assert(game.IsValid);
+        XElement table = new("table", new XAttribute("class", "board"));
+        if (addVerticalSpace)
+            table.Add(new XAttribute("style", "margin-top: 3em;"));
+        XElement tableBody = new("tbody");
+        table.Add(tableBody);
+
+        const int columnCount = 4;
+        const int rowCount = (Constants.CardCount + columnCount - 1) / columnCount;
+        HashSet<int> moves = new(Constants.CardCount);
+        game.PopulatePossibleMoves(node, moves);
+        for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
+        {
+            XElement tr = new("tr");
+            tableBody.Add(tr);
+            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex, ++cardIndex)
+            {
+                XElement td = new("td");
+                tr.Add(td);
+                int card = game.GetCard(cardIndex);
+                string s = Int32CardConcept.Instance.ToString(card);
+                string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
+                int cardMask = 1 << cardIndex;
+                bool hasFirst = (node.FirstPlayerTokens & cardMask) is not 0;
+                bool hasSecond = (node.SecondPlayerTokens & cardMask) is not 0;
+                Debug.Assert(!hasFirst || !hasSecond);
+                if (hasFirst)
+                    td.Add(new XElement("span", new XAttribute("class", "monospace"), '\u274c'));
+                else if (hasSecond)
+                    td.Add(new XElement("span", new XAttribute("class", "monospace"), '\u2b55'));
+                else if (!moves.Contains(cardIndex))
+                    td.Add(new XElement("span", new XAttribute("class", $"monospace unavailable"), s));
+                else
+                    td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
+            }
+        }
+
+        do
+        {
+            if (!node.TryGetCardIndex(out int cardIndex))
+                break;
+            XElement tableFooter = new("tfoot");
+            table.Add(tableFooter);
+            XElement tr = new("tr");
+            tableFooter.Add(tr);
+            int targetColumnIndex = node.SideToMove is 0 ? 3 : 0;
+            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
+            {
+                XElement td = new("td");
+                tr.Add(td);
+                if (columnIndex != targetColumnIndex)
+                    continue;
+                int card = game.GetCard(cardIndex);
+                string s = Int32CardConcept.Instance.ToString(card);
+                string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
+                td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
+            }
+        } while (false);
+
+        return table;
     }
 }

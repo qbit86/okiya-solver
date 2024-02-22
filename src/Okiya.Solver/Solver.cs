@@ -15,13 +15,11 @@ public sealed class Solver
     private readonly Game<int[]> _game;
     private Node _currentNode;
 
-    private Solver(Game<int[]> game, Node rootNode)
+    private Solver(Game<int[]> game, Node node)
     {
         _game = game;
-        _currentNode = rootNode;
+        _currentNode = node;
     }
-
-    public static Solver Create(int[] board) => new(Game.Create(board), new());
 
     public static Solver Create(Game<int[]> game)
     {
@@ -31,33 +29,18 @@ public sealed class Solver
         return new(game, new());
     }
 
-    public static Solver Create(
-        Game<int[]> game, int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int lastCardIndex = default)
+    public static Solver Create(Game<int[]> game, Node node)
     {
         if (!game.IsValid)
-            throw new ArgumentException("Game instance must be valid.", nameof(game));
-        uint firstPlayerTokensChecked = (uint)firstPlayerTokens;
-        if (firstPlayerTokensChecked > Constants.PlayerTokensMask)
-            throw new ArgumentOutOfRangeException(nameof(firstPlayerTokens));
-        uint secondPlayerTokensChecked = (uint)secondPlayerTokens;
-        if (secondPlayerTokensChecked > Constants.PlayerTokensMask)
-            throw new ArgumentOutOfRangeException(nameof(secondPlayerTokens));
-        if ((firstPlayerTokensChecked & secondPlayerTokensChecked) is not 0)
-            throw new ArgumentException("Players' tokens may not overlap.", nameof(secondPlayerTokens));
-        if (sideToMove is not (0 or 1))
-            throw new ArgumentOutOfRangeException(nameof(sideToMove));
-        if ((uint)lastCardIndex >= Constants.CardCount)
-            throw new ArgumentOutOfRangeException(nameof(lastCardIndex));
+            throw new ArgumentException("Game instance is not initialized.", nameof(game));
 
-        var rootNode = Node.CreateUnchecked(
-            firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, lastCardIndex);
-        return new(game, rootNode);
+        return new(game, node);
     }
 
     public bool TrySelectMove(out int move, out double score)
     {
         bool result = TrySelectMoveCore(out move, out double relativeScore);
-        int sign = Sign(_currentNode.GetSideToMove());
+        int sign = Sign(_currentNode.SideToMove);
         score = sign * relativeScore;
         return result;
     }
@@ -65,7 +48,7 @@ public sealed class Solver
     private bool TryMakeMove(out int move, out double score)
     {
         bool result = TrySelectMoveCore(out move, out double relativeScore);
-        int sign = Sign(_currentNode.GetSideToMove());
+        int sign = Sign(_currentNode.SideToMove);
         score = sign * relativeScore;
         if (result)
             _currentNode = _game.MakeMoveUnchecked(_currentNode, move);
@@ -116,7 +99,7 @@ public sealed class Solver
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
-            int possibleMoveCount = _game.PopulatePossibleMoves(_currentNode, buffer);
+            int possibleMoveCount = _game.PopulatePossibleMoves(_currentNode, buffer.AsSpan());
             if (possibleMoveCount is 0)
             {
                 score = -sbyte.MaxValue + _currentNode.GetTokenCount();
@@ -155,7 +138,7 @@ public sealed class Solver
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
-            int possibleMoveCount = _game.PopulatePossibleMoves(node, buffer);
+            int possibleMoveCount = _game.PopulatePossibleMoves(node, buffer.AsSpan());
             if (possibleMoveCount is 0)
                 return -sbyte.MaxValue + node.GetTokenCount();
 

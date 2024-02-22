@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Numerics;
@@ -34,25 +35,49 @@ public readonly record struct Node
         _cardIndexAndSideToMove = cardIndexAndSideToMove;
     }
 
-    internal static Node CreateUnchecked(uint firstPlayerTokens, uint secondPlayerTokens, int sideToMove, int cardIndex)
+    public int SideToMove => unchecked((int)(_cardIndexAndSideToMove >> CardIndexBitCount));
+
+    public int FirstPlayerTokens => unchecked((int)(_playersTokens & Constants.PlayerTokensMask));
+
+    public int SecondPlayerTokens => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
+
+    public static Node Create(int firstPlayerTokens, int secondPlayerTokens, int sideToMove, int cardIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(firstPlayerTokens);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(firstPlayerTokens, Constants.PlayerTokensMask);
+        ArgumentOutOfRangeException.ThrowIfNegative(secondPlayerTokens);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(secondPlayerTokens, Constants.PlayerTokensMask);
+        ArgumentOutOfRangeException.ThrowIfNegative(sideToMove);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(sideToMove, 1);
+        ArgumentOutOfRangeException.ThrowIfNegative(cardIndex);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(cardIndex, Constants.CardCount);
+        if ((firstPlayerTokens & secondPlayerTokens) is not 0)
+            throw new ArgumentException("Players' tokens may not overlap.", nameof(secondPlayerTokens));
+        uint firstPlayerTokensChecked = unchecked((uint)firstPlayerTokens);
+        uint secondPlayerTokensChecked = unchecked((uint)secondPlayerTokens);
+        uint cardIndexChecked = unchecked((uint)cardIndex);
+        return CreateUnchecked(firstPlayerTokensChecked, secondPlayerTokensChecked, sideToMove, cardIndexChecked);
+    }
+
+    private static Node CreateUnchecked(uint firstPlayerTokens, uint secondPlayerTokens, int sideToMove, uint cardIndex)
     {
         Debug.Assert(firstPlayerTokens <= Constants.PlayerTokensMask);
         Debug.Assert(secondPlayerTokens <= Constants.PlayerTokensMask);
         Debug.Assert((firstPlayerTokens & secondPlayerTokens) is 0);
         Debug.Assert(sideToMove is 0 or 1);
-        Debug.Assert((uint)cardIndex < Constants.CardCount);
+        Debug.Assert(cardIndex < Constants.CardCount);
         uint playersTokens = firstPlayerTokens | (secondPlayerTokens << Constants.CardCount);
         uint sideBit = sideToMove is 0 ? 0 : 1u << CardIndexBitCount;
-        uint cardIndexAndSideToMove = sideBit | unchecked((uint)cardIndex);
+        uint cardIndexAndSideToMove = sideBit | cardIndex;
         return new(playersTokens, cardIndexAndSideToMove);
     }
 
     private bool PrintMembers(StringBuilder builder)
     {
         CultureInfo p = CultureInfo.InvariantCulture;
-        builder.Append(p, $"Players = {GetSecondPlayerTokens():b16}|{GetFirstPlayerTokens():b16}");
+        builder.Append(p, $"Players = {SecondPlayerTokens:b16}|{FirstPlayerTokens:b16}");
         builder.Append(p, $", CardIndex = {GetCardIndexOrDefault()}");
-        builder.Append(p, $", SideToMove = {GetSideToMove()}");
+        builder.Append(p, $", SideToMove = {SideToMove}");
         return true;
     }
 
@@ -60,41 +85,32 @@ public readonly record struct Node
 
     internal int GetTokenCount() => BitOperations.PopCount(_playersTokens);
 
-    internal int GetPlayerTokens(int side) => side is 0 ? GetFirstPlayerTokens() : GetSecondPlayerTokens();
-
-    private int GetFirstPlayerTokens() => unchecked((int)(_playersTokens & Constants.PlayerTokensMask));
-
-    private int GetSecondPlayerTokens() => unchecked((int)(_playersTokens >> PlayerTokensBitCount));
+    internal int GetPlayerTokens(int side) => side is 0 ? FirstPlayerTokens : SecondPlayerTokens;
 
     private uint GetAllTokens() => _playersTokens | (_playersTokens >> PlayerTokensBitCount);
 
     private int GetCardIndexOrDefault() => unchecked((int)(_cardIndexAndSideToMove & CardIndexMask));
 
-    internal bool TryGetCardIndex(out int cardIndex)
+    public bool TryGetCardIndex(out int cardIndex)
     {
         cardIndex = GetCardIndexOrDefault();
         return _playersTokens is not 0u;
     }
 
-    internal int GetSideToMove() => unchecked((int)(_cardIndexAndSideToMove >> CardIndexBitCount));
-
-    internal (int CurrentPlayerTokens, int OpponentPlayerTokens) GetPlayersTokens()
-    {
-        int firstPlayerTokens = GetFirstPlayerTokens();
-        int secondPlayerTokens = GetSecondPlayerTokens();
-        return GetSideToMove() is 0 ? (firstPlayerTokens, secondPlayerTokens) : (secondPlayerTokens, firstPlayerTokens);
-    }
+    internal (int CurrentPlayerTokens, int OpponentPlayerTokens) GetPlayersTokens() => SideToMove is 0
+        ? (FirstPlayerTokens, SecondPlayerTokens)
+        : (SecondPlayerTokens, FirstPlayerTokens);
 
     internal Node AddPlayerTokenUnchecked(int index)
     {
         Debug.Assert(unchecked((uint)index < Constants.CardCount));
-        return GetSideToMove() is 0 ? AddFirstPlayerTokenUnchecked(index) : AddSecondPlayerTokenUnchecked(index);
+        return SideToMove is 0 ? AddFirstPlayerTokenUnchecked(index) : AddSecondPlayerTokenUnchecked(index);
     }
 
     internal bool TryAddPlayerToken(int index, out Node child)
     {
         Debug.Assert(unchecked((uint)index < Constants.CardCount));
-        return GetSideToMove() is 0
+        return SideToMove is 0
             ? TryAddFirstPlayerToken(index, out child)
             : TryAddSecondPlayerToken(index, out child);
     }
