@@ -107,16 +107,13 @@ internal static class Program
                 else if (hasSecond)
                     td.Add(new XElement("span", new XAttribute("class", "monospace"), '\u2b55'));
                 else if (!moves.Contains(cardIndex))
-                    td.Add(new XElement("span", new XAttribute("class", $"monospace unavailable"), s));
+                    td.Add(new XElement("span", new XAttribute("class", "monospace unavailable"), s));
                 else
                     td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
             }
         }
 
-        do
         {
-            if (!node.TryGetCardIndex(out int cardIndex))
-                break;
             XElement tableFooter = new("tfoot");
             table.Add(tableFooter);
             XElement tr = new("tr");
@@ -128,12 +125,18 @@ internal static class Program
                 tr.Add(td);
                 if (columnIndex != targetColumnIndex)
                     continue;
+                if (!node.TryGetCardIndex(out int cardIndex))
+                {
+                    td.Add(new XElement("span", new XAttribute("class", "monospace unavailable"), "\u00a0\u00a0"));
+                    continue;
+                }
+
                 int card = game.GetCard(cardIndex);
                 string s = Int32CardConcept.Instance.ToString(card);
                 string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
                 td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
             }
-        } while (false);
+        }
 
         return table;
     }
