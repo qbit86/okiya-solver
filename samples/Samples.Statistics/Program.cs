@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,6 +26,13 @@ internal static class Program
         stopwatch.Stop();
         Console.WriteLine($"Finished in {stopwatch.Elapsed}");
         Console.WriteLine($"{nameof(gameCount)}: {gameCount}");
+        ILookup<int, SeedScorePair> lookup = seedScorePairs.ToLookup(p => p.Score.CompareTo(0.0));
+        foreach (IGrouping<int, SeedScorePair> grouping in lookup)
+            Console.WriteLine($"{grouping.Key}:\t{grouping.Count()}");
+
+        SeedScorePair worstSeedScorePair = seedScorePairs.MinBy(it => it.Score);
+        Console.WriteLine($"{nameof(worstSeedScorePair)}: {worstSeedScorePair}");
+
         return;
 
         int Enumerate()
