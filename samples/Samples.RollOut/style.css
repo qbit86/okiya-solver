@@ -35,3 +35,7 @@ table.board {
   margin-right: auto;
   text-align: center;
 }
+
+table.board tfoot tr td {
+  padding-top: 1em;
+}
