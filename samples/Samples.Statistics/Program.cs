@@ -13,12 +13,11 @@ internal static class Program
 {
     private static async Task Main()
     {
-        const int initialSeed = 1;
+        const int initialSeed = 6;
         var stopwatch = new Stopwatch();
         List<SeedScorePair> seedScorePairs = [];
         using CancellationTokenSource cts = new();
         CancellationToken cancellationToken = cts.Token;
-        cts.CancelAfter(TimeSpan.FromMinutes(1.0));
         int[] cards = GC.AllocateUninitializedArray<int>(Constants.CardCount);
         var countFuture = Task.Run(Enumerate, cancellationToken);
         Task readLineFuture = Console.In.ReadLineAsync(cancellationToken).AsTask();
