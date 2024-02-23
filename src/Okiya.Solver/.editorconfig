@@ -4,3 +4,6 @@ dotnet_diagnostic.CS8520.severity = none # The given expression always matches t
 
 [Game.cs]
 resharper_redundant_assignment_highlighting = none # RedundantAssignment
+
+[RandomizedSolver.cs]
+dotnet_diagnostic.CA5394.severity = none # Do not use insecure randomness
