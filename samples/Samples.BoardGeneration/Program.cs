@@ -10,9 +10,9 @@ internal static class Program
 
     private static void Main()
     {
-        Random random = new(42);
+        Random prng = new(42);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
-        random.Shuffle(cards);
+        prng.Shuffle(cards);
         const int columnCount = 4;
         int rowCount = (cards.Length + columnCount - 1) / columnCount;
         for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
