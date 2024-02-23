@@ -2,8 +2,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using static Okiya.TryHelpers;
 
 namespace Okiya;
@@ -17,6 +15,7 @@ public sealed class Solver
 
     private Solver(Game<int[]> game, Node node)
     {
+        Debug.Assert(game.IsValid);
         _game = game;
         _currentNode = node;
     }
@@ -40,7 +39,7 @@ public sealed class Solver
     public bool TrySelectMove(out int move, out double score)
     {
         bool result = TrySelectMoveCore(out move, out double relativeScore);
-        int sign = Sign(_currentNode.SideToMove);
+        int sign = SolverHelpers.Sign(_currentNode.SideToMove);
         score = sign * relativeScore;
         return result;
     }
@@ -48,7 +47,7 @@ public sealed class Solver
     private bool TryMakeMove(out int move, out double score)
     {
         bool result = TrySelectMoveCore(out move, out double relativeScore);
-        int sign = Sign(_currentNode.SideToMove);
+        int sign = SolverHelpers.Sign(_currentNode.SideToMove);
         score = sign * relativeScore;
         if (result)
             _currentNode = _game.MakeMoveUnchecked(_currentNode, move);
@@ -112,7 +111,7 @@ public sealed class Solver
             foreach (int moveCandidate in possibleMoves)
             {
                 Node child = _game.MakeMoveUnchecked(_currentNode, moveCandidate);
-                double scoreCandidate = -Negamax(child);
+                double scoreCandidate = -SolverHelpers.Negamax(_game, child);
                 if (scoreCandidate > bestScore)
                 {
                     bestScore = scoreCandidate;
@@ -129,41 +128,4 @@ public sealed class Solver
             ArrayPool<int>.Shared.Return(buffer);
         }
     }
-
-    private double Negamax(Node node)
-    {
-        if (Game.IsTerminalNode(node, out double score))
-            return score;
-
-        int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
-        try
-        {
-            int possibleMoveCount = _game.PopulatePossibleMoves(node, buffer.AsSpan());
-            if (possibleMoveCount is 0)
-                return -sbyte.MaxValue + node.GetTokenCount();
-
-            ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
-            double bestScore = double.NegativeInfinity;
-            foreach (int moveCandidate in possibleMoves)
-            {
-                Node child = _game.MakeMoveUnchecked(node, moveCandidate);
-                double scoreCandidate = -Negamax(child);
-                if (scoreCandidate > bestScore)
-                    bestScore = scoreCandidate;
-            }
-
-            return bestScore;
-        }
-        finally
-        {
-            ArrayPool<int>.Shared.Return(buffer);
-        }
-    }
-
-    private static int Sign(int sideToMove) =>
-        sideToMove switch { 0 => 1, 1 => -1, _ => ThrowUnreachableException() };
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [DoesNotReturn]
-    private static int ThrowUnreachableException() => throw new UnreachableException();
 }
