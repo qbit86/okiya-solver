@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace Okiya;
 
-using SeedScorePair = (int Seed, double Score);
+using SeedMoveScore = (int Seed, int Move, double Score);
 
 internal static class Program
 {
     private static async Task Main()
     {
-        const int initialSeed = 6;
+        const int initialSeed = 141;
         var stopwatch = new Stopwatch();
-        List<SeedScorePair> seedScorePairs = [];
+        List<SeedMoveScore> smsTuples = [];
         using CancellationTokenSource cts = new();
         CancellationToken cancellationToken = cts.Token;
         int[] cards = GC.AllocateUninitializedArray<int>(Constants.CardCount);
@@ -26,11 +26,11 @@ internal static class Program
         int gameCount = await countFuture.ConfigureAwait(false);
         Console.WriteLine($"Finished in {stopwatch.Elapsed}");
         Console.WriteLine($"{nameof(gameCount)}: {gameCount}");
-        ILookup<int, SeedScorePair> lookup = seedScorePairs.ToLookup(p => p.Score.CompareTo(0.0));
-        foreach (IGrouping<int, SeedScorePair> grouping in lookup)
+        ILookup<int, SeedMoveScore> lookup = smsTuples.ToLookup(it => it.Score.CompareTo(0.0));
+        foreach (IGrouping<int, SeedMoveScore> grouping in lookup)
             Console.WriteLine($"{grouping.Key}:\t{grouping.Count()}");
 
-        SeedScorePair worstSeedScorePair = seedScorePairs.MinBy(it => it.Score);
+        SeedMoveScore worstSeedScorePair = smsTuples.MinBy(it => it.Score);
         Console.WriteLine($"{nameof(worstSeedScorePair)}: {worstSeedScorePair}");
 
         return;
@@ -50,9 +50,9 @@ internal static class Program
                     var game = Game.Create(cards);
                     Node rootNode = new();
                     var solver = Solver.Create(game, rootNode);
-                    if (!solver.TrySelectMove(out _, out double score))
+                    if (!solver.TrySelectMove(out int move, out double score))
                         throw new InvalidOperationException();
-                    seedScorePairs.Add((seed, score));
+                    smsTuples.Add((seed, move, score));
                 }
 
                 return iterationCount;
