@@ -43,9 +43,9 @@ internal static class Program
                 int iterationCount = 0;
                 for (int seed = initialSeed; !cancellationToken.IsCancellationRequested; ++seed, ++iterationCount)
                 {
-                    Random random = new(seed);
                     for (int i = 0; i < cards.Length; ++i)
                         cards[i] = i;
+                    Random random = new(seed);
                     random.Shuffle(cards);
                     var game = Game.Create(cards);
                     Node rootNode = new();
