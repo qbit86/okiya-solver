@@ -9,15 +9,15 @@ public static class Game
 {
     private static readonly int[] s_winPatterns = CreateWinPatters();
 
-    public static Game<TCardCollection> Create<TCardCollection>(TCardCollection board)
+    public static Game<TCardCollection> Create<TCardCollection>(TCardCollection cards)
         where TCardCollection : IReadOnlyList<int>
     {
-        if (board is null)
-            throw new ArgumentNullException(nameof(board));
-        if (board.Count < Constants.CardCount)
-            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(board));
+        if (cards is null)
+            throw new ArgumentNullException(nameof(cards));
+        if (cards.Count < Constants.CardCount)
+            throw new ArgumentException($"Board length must be at least {Constants.CardCount}.", nameof(cards));
 
-        return new(board);
+        return new(cards);
     }
 
     internal static int PopulatePossibleFirstMoves(Span<int> destination)
