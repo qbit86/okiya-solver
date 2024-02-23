@@ -16,26 +16,26 @@ internal static class Program
 
     private static void Main()
     {
-        const int seed = 1729;
-        Random random = new(seed);
+        const int seed = 310;
+        Random prng = new(seed);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
-        random.Shuffle(cards);
+        prng.Shuffle(cards);
         var stopwatch = Stopwatch.StartNew();
         var game = Game.Create(cards);
         Node rootNode = new();
 #if true
         var solver = Solver.Create(game, rootNode);
         Span<int> buffer = stackalloc int[cards.Length];
-        double evaluation = solver.MakeMoves(buffer, out int moveCount);
+        double score = solver.MakeMoves(buffer, out int moveCount);
         ReadOnlySpan<int> moves = buffer[..moveCount];
 #else
-        const double evaluation = 112.0;
+        const double score = 112.0;
         ReadOnlySpan<int> moves = stackalloc int[] { 8, 1, 5, 4, 10, 14, 3, 12, 2, 7, 0, 6, 9, 15, 11 };
         int moveCount = moves.Length;
 #endif
         stopwatch.Stop();
         Console.WriteLine($"Finished in {stopwatch.Elapsed}");
-        Console.WriteLine(Invariant($"{nameof(evaluation)}: {evaluation}"));
+        Console.WriteLine(Invariant($"{nameof(score)}: {score}"));
 
         Console.WriteLine(Invariant($"{nameof(moveCount)}: {moveCount}"));
         Console.WriteLine($"{nameof(moves)}:");
@@ -47,7 +47,7 @@ internal static class Program
 
         XDocument document = HtmlHelpers.CreateHtmlDocument(out XElement title, out XElement body);
 
-        title.Add($"{nameof(Okiya)} - {seed}");
+        title.Add($"{nameof(Okiya)} - {seed}, {OutcomeString(score)}");
 
         {
             XElement table = CreatePositionTable(game, rootNode);
@@ -66,7 +66,7 @@ internal static class Program
             nameof(Okiya), Assembly.GetExecutingAssembly().GetName().Name);
         if (!Directory.Exists(outputDir))
             Directory.CreateDirectory(outputDir);
-        string outputBaseName = $"{DateTime.Now:dd_HH-mm-ss}.html";
+        string outputBaseName = $"{DateTime.Now:dd_HH-mm-ss}-{seed}-{OutcomeChar(score)}.html";
         string outputPath = Path.Join(outputDir, outputBaseName);
         Console.WriteLine($"{nameof(outputPath)}: {outputPath}");
         XmlWriterSettings settings = new() { Indent = true, OmitXmlDeclaration = true };
@@ -140,4 +140,18 @@ internal static class Program
 
         return table;
     }
+
+    private static char OutcomeChar(double score) => score switch
+    {
+        < 0.0 => 'O',
+        > 0.0 => 'X',
+        _ => '='
+    };
+
+    private static string OutcomeString(double score) => score switch
+    {
+        < 0.0 => "O wins",
+        > 0.0 => "X wins",
+        _ => "draw"
+    };
 }
