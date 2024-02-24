@@ -106,10 +106,14 @@ public sealed class Solver
             }
 
             ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
+            // Randomizing the order of move candidates.
+            int lowerBound = SolverHelpers.RandomizedIndex(possibleMoves);
+            int upperBound = lowerBound + possibleMoveCount;
             double bestScore = double.NegativeInfinity;
             int bestMove = -1;
-            foreach (int moveCandidate in possibleMoves)
+            for (int i = lowerBound; i < upperBound; ++i)
             {
+                int moveCandidate = possibleMoves[i % possibleMoveCount];
                 Node child = _game.MakeMoveUnchecked(_currentNode, moveCandidate);
                 double scoreCandidate = -SolverHelpers.Negamax(_game, child);
                 if (scoreCandidate > bestScore)
