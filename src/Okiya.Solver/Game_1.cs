@@ -20,12 +20,12 @@ public readonly record struct Game<TCardCollection>
     public bool IsValid => _cards is not null;
 
     public bool TryGetCard(int index, out int card) =>
-        unchecked((uint)index < (uint)_cards.Count) ? Some(_cards[index], out card) : None(out card);
+        unchecked((uint)index < Constants.CardCount) ? Some(_cards[index], out card) : None(out card);
 
     public int GetCard(int index)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, _cards.Count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(index, Constants.CardCount);
 
         return _cards[index];
     }
@@ -72,6 +72,7 @@ public readonly record struct Game<TCardCollection>
     {
         if (unchecked((uint)move >= Constants.CardCount))
             return None(node, out child);
+
         if (node.TryGetCardIndex(out int cardIndex))
         {
             Int32CardConcept c = Int32CardConcept.Instance;
@@ -89,6 +90,7 @@ public readonly record struct Game<TCardCollection>
     {
         if (moves is null)
             throw new ArgumentNullException(nameof(moves));
+
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         int moveCount = PopulatePossibleMoves(node, buffer.AsSpan());
         Span<int> span = buffer.AsSpan(0, moveCount);
