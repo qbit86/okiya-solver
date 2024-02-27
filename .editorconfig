@@ -8,7 +8,7 @@ insert_final_newline = true
 max_line_length = 120
 trim_trailing_whitespace = true
 
-[*.{csproj,css,html,http,json,projitems,props,resx,shproj,targets,xml,yaml}]
+[*.{csproj,css,html,http,json,projitems,props,resx,shproj,svg,targets,xml,yaml}]
 indent_size = 2
 
 [*.{sln,csproj.DotSettings,sln.DotSettings}]

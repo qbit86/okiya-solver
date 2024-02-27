@@ -1,0 +1,117 @@
+<svg version="1.1" width="256" height="192" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .monospace {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    span.suit0, span.suit1, span.suit2, span.suit3, span.unavailable {
+      border-radius: 5px;
+      border-style: hidden;
+      color: #eee8d5;
+      padding-left: 0.2em;
+      padding-right: 0.2em;
+    }
+
+    span.suit0 {
+      background-color: #859900;
+    }
+
+    span.suit1 {
+      background-color: #268bd2;
+    }
+
+    span.suit2 {
+      background-color: #dc322f;
+    }
+
+    span.suit3 {
+      background-color: #002b36;
+    }
+
+    span.unavailable {
+      background-color: #93a1a1;
+    }
+
+    table.board {
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+
+    table.board tfoot tr td {
+      padding-top: 1em;
+    }
+  </style>
+  <foreignObject width="100%" height="100%">
+    <table xmlns="http://www.w3.org/1999/xhtml" class="board">
+      <tbody>
+        <tr>
+          <td>
+            <span class="monospace unavailable">K♥</span>
+          </td>
+          <td>
+            <span class="monospace suit3">J♠</span>
+          </td>
+          <td>
+            <span class="monospace suit2">J♥</span>
+          </td>
+          <td>
+            <span class="monospace">❌</span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="monospace">❌</span>
+          </td>
+          <td>
+            <span class="monospace">⭕</span>
+          </td>
+          <td>
+            <span class="monospace unavailable">K♠</span>
+          </td>
+          <td>
+            <span class="monospace unavailable">A♠</span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="monospace suit1">J♦</span>
+          </td>
+          <td>
+            <span class="monospace">⭕</span>
+          </td>
+          <td>
+            <span class="monospace unavailable">K♦</span>
+          </td>
+          <td>
+            <span class="monospace">⭕</span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="monospace suit0">K♣</span>
+          </td>
+          <td>
+            <span class="monospace unavailable">A♦</span>
+          </td>
+          <td>
+            <span class="monospace">❌</span>
+          </td>
+          <td>
+            <span class="monospace suit0">A♣</span>
+          </td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td />
+          <td />
+          <td />
+          <td>
+            <span class="monospace suit0">J♣</span>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </foreignObject>
+</svg>
