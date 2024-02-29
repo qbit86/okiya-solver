@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using static Okiya.TryHelpers;
 
 namespace Okiya;
 
@@ -12,6 +14,35 @@ public sealed class Int32CardConcept : ICardConcept<int>
     public static Int32CardConcept Instance { get; } = new();
 
     public string ToString(int card) => s_cardStrings[card & Constants.CardMask];
+
+    public int Parse(string s)
+    {
+        if (TryParse(s, out int result))
+            return result;
+
+        throw new FormatException($"An invalid card was specified: '{s}'.");
+    }
+
+    public bool TryParse(string s, out int card)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+
+        if (s.Length < 2)
+            return None(out card);
+
+        int rank = Ranks.IndexOf(s[0], StringComparison.Ordinal);
+        Debug.Assert(rank < Ranks.Length);
+        if (rank < 0)
+            return None(out card);
+
+        int suit = Suits.IndexOf(s[1], StringComparison.Ordinal);
+        Debug.Assert(suit < Suits.Length);
+        if (suit < 0)
+            return None(out card);
+
+        card = CreateCard(suit, rank);
+        return true;
+    }
 
     public int Suit(int card) => card >> Constants.RankBitCount;
 
