@@ -91,7 +91,7 @@ public sealed class RandomizedSolver
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
-            int possibleMoveCount = _game.PopulatePossibleMoves(_currentNode, buffer.AsSpan());
+            int possibleMoveCount = _game.PopulateLegalMoves(_currentNode, buffer.AsSpan());
             if (possibleMoveCount is 0)
             {
                 score = -sbyte.MaxValue + _currentNode.GetTokenCount();

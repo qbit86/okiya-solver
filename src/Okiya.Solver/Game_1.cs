@@ -85,21 +85,21 @@ public readonly record struct Game<TCardCollection>
         return node.TryAddPlayerToken(move, out child);
     }
 
-    public void PopulatePossibleMoves<TCollection>(Node node, TCollection moves)
+    public void PopulateLegalMoves<TCollection>(Node node, TCollection moves)
         where TCollection : ICollection<int>
     {
         if (moves is null)
             throw new ArgumentNullException(nameof(moves));
 
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
-        int moveCount = PopulatePossibleMoves(node, buffer.AsSpan());
+        int moveCount = PopulateLegalMoves(node, buffer.AsSpan());
         Span<int> span = buffer.AsSpan(0, moveCount);
         foreach (int move in span)
             moves.Add(move);
         ArrayPool<int>.Shared.Return(buffer);
     }
 
-    internal int PopulatePossibleMoves(Node node, Span<int> destination)
+    internal int PopulateLegalMoves(Node node, Span<int> destination)
     {
         if (!node.TryGetCardIndex(out int lastCardIndex))
             return Game.PopulatePossibleFirstMoves(destination);

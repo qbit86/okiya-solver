@@ -86,7 +86,7 @@ internal static class Program
         const int columnCount = 4;
         const int rowCount = (Constants.CardCount + columnCount - 1) / columnCount;
         HashSet<int> moves = new(Constants.CardCount);
-        game.PopulatePossibleMoves(node, moves);
+        game.PopulateLegalMoves(node, moves);
         for (int rowIndex = 0, cardIndex = 0; rowIndex < rowCount; ++rowIndex)
         {
             XElement tr = new("tr");

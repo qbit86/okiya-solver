@@ -17,7 +17,7 @@ internal static class SolverHelpers
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
-            int possibleMoveCount = game.PopulatePossibleMoves(node, buffer.AsSpan());
+            int possibleMoveCount = game.PopulateLegalMoves(node, buffer.AsSpan());
             if (possibleMoveCount is 0)
                 return -sbyte.MaxValue + node.GetTokenCount();
 
