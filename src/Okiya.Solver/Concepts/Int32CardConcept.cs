@@ -6,7 +6,8 @@ namespace Okiya;
 
 public sealed class Int32CardConcept : ICardConcept<int>
 {
-    private const string Suits = "\u2663\u2666\u2665\u2660";
+    private const string Suits = "\u2663\u2666\u2665\u2660"; // ♣♦♥♠
+    private const string SuitLetters = "CDHS"; // Clubs, Diamonds, Hearts, Spades
     private const string Ranks = "JQKA";
 
     private static readonly string[] s_cardStrings = CreateCardStrings();
@@ -38,7 +39,12 @@ public sealed class Int32CardConcept : ICardConcept<int>
         int suit = Suits.IndexOf(s[1], StringComparison.Ordinal);
         Debug.Assert(suit < Suits.Length);
         if (suit < 0)
-            return None(out card);
+        {
+            suit = SuitLetters.IndexOf(s[1], StringComparison.Ordinal);
+            Debug.Assert(suit < SuitLetters.Length);
+            if (suit < 0)
+                return None(out card);
+        }
 
         card = CreateCard(suit, rank);
         return true;
