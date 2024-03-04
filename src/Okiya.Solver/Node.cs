@@ -93,6 +93,14 @@ public readonly record struct Node
 
     private int GetCardIndexOrDefault() => unchecked((int)(_cardIndexAndSideToMove & CardIndexMask));
 
+    public int GetCardIndex()
+    {
+        int cardIndex = GetCardIndexOrDefault();
+        if (_playersTokens is 0u)
+            throw new InvalidOperationException();
+        return cardIndex;
+    }
+
     public bool TryGetCardIndex(out int cardIndex)
     {
         cardIndex = GetCardIndexOrDefault();
