@@ -5,10 +5,10 @@ namespace Okiya;
 
 public sealed class GameTests
 {
-    public static TheoryData<int[], Node, int> MoveTheoryData { get; } = CreateMoveTheoryData();
+    public static TheoryData<int[], Node, int> IllegalMoveTheoryData { get; } = CreateIllegalMoveTheoryData();
 
     [Theory]
-    [MemberData(nameof(MoveTheoryData), MemberType = typeof(GameTests))]
+    [MemberData(nameof(IllegalMoveTheoryData), MemberType = typeof(GameTests))]
     public void TryMakeMove_WhenIllegalMove_ReturnsFalse(int[] cards, Node node, int move)
     {
         var game = Game.Create(cards);
@@ -16,7 +16,7 @@ public sealed class GameTests
         Assert.False(actual);
     }
 
-    private static TheoryData<int[], Node, int> CreateMoveTheoryData()
+    private static TheoryData<int[], Node, int> CreateIllegalMoveTheoryData()
     {
         string[] cardStrings =
         [
@@ -29,7 +29,9 @@ public sealed class GameTests
 
         return new()
         {
-            { cards, new(), 5 }
+            { cards, new(), 5 },
+            { cards, Node.Create(1, 0, 1, 0), 5 },
+            { cards, Node.Create(1, 0, 1, 0), 0 }
         };
     }
 }
