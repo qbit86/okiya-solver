@@ -20,13 +20,15 @@ public static class Game
         return new(cards);
     }
 
-    internal static int PopulatePossibleFirstMoves(Span<int> destination)
+    internal static bool IsCenterBlock(int cardIndex) => cardIndex is 5 or 6 or 9 or 10;
+
+    internal static int PopulateLegalFirstMoves(Span<int> destination)
     {
         int maxMoveCount = int.Min(destination.Length, Constants.CardCount);
         int moveCount = 0;
         for (int i = 0; i < maxMoveCount; ++i)
         {
-            if (i is 5 or 6 or 9 or 10)
+            if (IsCenterBlock(i))
                 continue;
             destination[moveCount++] = i;
         }

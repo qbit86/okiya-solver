@@ -43,6 +43,8 @@ public readonly record struct Game<TCardCollection>
             if (c.Rank(newCard) != c.Rank(lastCard) && c.Suit(newCard) != c.Suit(lastCard))
                 throw new ArgumentException("Both rank and suit do not match the previous card.", nameof(move));
         }
+        else if (Game.IsCenterBlock(move))
+            throw new ArgumentException("The first move cannot be to the center block.", nameof(move));
 
         if (!node.TryAddPlayerToken(move, out Node child))
             throw new ArgumentException("The move is already done.", nameof(move));
@@ -63,6 +65,10 @@ public readonly record struct Game<TCardCollection>
             int newCard = _cards[move];
             Debug.Assert(c.Rank(newCard) == c.Rank(lastCard) || c.Suit(newCard) == c.Suit(lastCard));
         }
+        else
+        {
+            Debug.Assert(!Game.IsCenterBlock(move));
+        }
 #endif
 
         return node.AddPlayerTokenUnchecked(move);
@@ -81,6 +87,8 @@ public readonly record struct Game<TCardCollection>
             if (c.Rank(newCard) != c.Rank(lastCard) && c.Suit(newCard) != c.Suit(lastCard))
                 return None(node, out child);
         }
+        else if (Game.IsCenterBlock(move))
+            return None(node, out child);
 
         return node.TryAddPlayerToken(move, out child);
     }
@@ -102,7 +110,7 @@ public readonly record struct Game<TCardCollection>
     internal int PopulateLegalMoves(Node node, Span<int> destination)
     {
         if (!node.TryGetCardIndex(out int lastCardIndex))
-            return Game.PopulatePossibleFirstMoves(destination);
+            return Game.PopulateLegalFirstMoves(destination);
         int lastCard = _cards[lastCardIndex];
         Int32CardConcept c = Int32CardConcept.Instance;
         int tokensPlayed = node.GetPlayerTokens(0) | node.GetPlayerTokens(1);
