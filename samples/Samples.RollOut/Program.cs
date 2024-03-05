@@ -20,23 +20,18 @@ internal static class Program
         Random prng = new(seed);
         int[] cards = Enumerable.Range(0, Constants.CardCount).ToArray();
         prng.Shuffle(cards);
+
         var stopwatch = Stopwatch.StartNew();
         var game = Game.Create(cards);
         Node rootNode = new();
-#if true
         var solver = Solver.Create(game, rootNode);
         Span<int> buffer = stackalloc int[cards.Length];
         double score = solver.MakeMoves(buffer, out int moveCount);
         ReadOnlySpan<int> moves = buffer[..moveCount];
-#else
-        const double score = 112.0;
-        ReadOnlySpan<int> moves = stackalloc int[] { 8, 1, 5, 4, 10, 14, 3, 12, 2, 7, 0, 6, 9, 15, 11 };
-        int moveCount = moves.Length;
-#endif
         stopwatch.Stop();
+
         Console.WriteLine($"Finished in {stopwatch.Elapsed}");
         Console.WriteLine(Invariant($"{nameof(score)}: {score}"));
-
         Console.WriteLine(Invariant($"{nameof(moveCount)}: {moveCount}"));
         Console.WriteLine($"{nameof(moves)}:");
         for (int i = 0; i < moves.Length; ++i)
