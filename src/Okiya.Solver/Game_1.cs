@@ -43,7 +43,7 @@ public readonly record struct Game<TCardCollection>
             if (c.Rank(newCard) != c.Rank(lastCard) && c.Suit(newCard) != c.Suit(lastCard))
                 throw new ArgumentException("Both rank and suit do not match the previous card.", nameof(move));
         }
-        else if (Game.IsCenterBlock(move))
+        else if (Game.IsCentralBlock(move))
             throw new ArgumentException("The first move cannot be to the center block.", nameof(move));
 
         if (!node.TryAddPlayerToken(move, out Node child))
@@ -67,7 +67,7 @@ public readonly record struct Game<TCardCollection>
         }
         else
         {
-            Debug.Assert(!Game.IsCenterBlock(move));
+            Debug.Assert(!Game.IsCentralBlock(move));
         }
 #endif
 
@@ -87,7 +87,7 @@ public readonly record struct Game<TCardCollection>
             if (c.Rank(newCard) != c.Rank(lastCard) && c.Suit(newCard) != c.Suit(lastCard))
                 return None(node, out child);
         }
-        else if (Game.IsCenterBlock(move))
+        else if (Game.IsCentralBlock(move))
             return None(node, out child);
 
         return node.TryAddPlayerToken(move, out child);

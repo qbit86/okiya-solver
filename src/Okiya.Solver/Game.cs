@@ -20,7 +20,7 @@ public static class Game
         return new(cards);
     }
 
-    internal static bool IsCenterBlock(int cardIndex) => cardIndex is 5 or 6 or 9 or 10;
+    internal static bool IsCentralBlock(int cardIndex) => cardIndex is 5 or 6 or 9 or 10;
 
     internal static int PopulateLegalFirstMoves(Span<int> destination)
     {
@@ -28,7 +28,7 @@ public static class Game
         int moveCount = 0;
         for (int i = 0; i < maxMoveCount; ++i)
         {
-            if (IsCenterBlock(i))
+            if (IsCentralBlock(i))
                 continue;
             destination[moveCount++] = i;
         }
