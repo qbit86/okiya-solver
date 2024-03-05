@@ -14,7 +14,7 @@ internal static class Program
 {
     private static async Task Main()
     {
-        const int initialSeed = 2372;
+        const int initialSeed = 2642;
         var stopwatch = new Stopwatch();
         List<SeedMoveScore> smsTuples = [];
         using CancellationTokenSource cts = new();
