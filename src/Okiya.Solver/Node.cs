@@ -170,4 +170,7 @@ public readonly record struct Node
         child = new(playersTokens, cardIndexAndSideToMove);
         return true;
     }
+
+    public override int GetHashCode() =>
+        unchecked(_cardIndexAndSideToMove.GetHashCode() * -1521134295 + _playersTokens.GetHashCode());
 }
