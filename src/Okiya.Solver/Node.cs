@@ -53,6 +53,8 @@ public readonly record struct Node
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(cardIndex, Constants.CardCount);
         if ((firstPlayerTokens & secondPlayerTokens) is not 0)
             throw new ArgumentException("Players' tokens may not overlap.", nameof(secondPlayerTokens));
+        if (((firstPlayerTokens | secondPlayerTokens) & (1 << cardIndex)) is 0)
+            throw new ArgumentException($"The move '{cardIndex}' has not yet been made.", nameof(cardIndex));
 
         uint firstPlayerTokensChecked = unchecked((uint)firstPlayerTokens);
         uint secondPlayerTokensChecked = unchecked((uint)secondPlayerTokens);
