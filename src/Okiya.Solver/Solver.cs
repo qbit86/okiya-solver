@@ -100,7 +100,7 @@ public sealed class Solver
             }
 
             ReadOnlySpan<int> legalMoves = buffer.AsSpan()[..legalMoveCount];
-            int lowerBound = _randomizeMoveOrdering ? SolverHelpers.RandomizedIndex(legalMoves) : 0;
+            int lowerBound = _randomizeMoveOrdering ? SolverHelpers.Mod(_currentNode.GetHashCode(), legalMoveCount) : 0;
             int upperBound = lowerBound + legalMoveCount;
             double bestScore = double.NegativeInfinity;
             int bestMove = -1;
