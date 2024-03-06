@@ -24,7 +24,7 @@ internal static class Program
         var stopwatch = Stopwatch.StartNew();
         var game = Game.Create(cards);
         Node rootNode = new();
-        var solver = Solver.Create(game, rootNode);
+        var solver = Solver.Create(game, rootNode, true);
         Span<int> buffer = stackalloc int[cards.Length];
         double score = solver.MakeMoves(buffer, out int moveCount);
         ReadOnlySpan<int> moves = buffer[..moveCount];

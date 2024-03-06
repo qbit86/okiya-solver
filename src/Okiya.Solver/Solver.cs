@@ -11,29 +11,23 @@ namespace Okiya;
 public sealed class Solver
 {
     private readonly Game<int[]> _game;
+    private readonly bool _randomizeMoveOrdering;
     private Node _currentNode;
 
-    private Solver(Game<int[]> game, Node node)
+    private Solver(Game<int[]> game, Node node, bool randomizeMoveOrdering)
     {
         Debug.Assert(game.IsValid);
         _game = game;
         _currentNode = node;
+        _randomizeMoveOrdering = randomizeMoveOrdering;
     }
 
-    public static Solver Create(Game<int[]> game)
+    public static Solver Create(Game<int[]> game, Node node, bool randomizeMoveOrdering = false)
     {
         if (!game.IsValid)
             throw new ArgumentException("Game instance is not initialized.", nameof(game));
 
-        return new(game, new());
-    }
-
-    public static Solver Create(Game<int[]> game, Node node)
-    {
-        if (!game.IsValid)
-            throw new ArgumentException("Game instance is not initialized.", nameof(game));
-
-        return new(game, node);
+        return new(game, node, randomizeMoveOrdering);
     }
 
     public bool TrySelectMove(out int move, out double score)
@@ -98,22 +92,21 @@ public sealed class Solver
         int[] buffer = ArrayPool<int>.Shared.Rent(Constants.CardCount);
         try
         {
-            int possibleMoveCount = _game.PopulateLegalMoves(_currentNode, buffer.AsSpan());
-            if (possibleMoveCount is 0)
+            int legalMoveCount = _game.PopulateLegalMoves(_currentNode, buffer.AsSpan());
+            if (legalMoveCount is 0)
             {
                 score = -sbyte.MaxValue + _currentNode.GetTokenCount();
                 return None(-1, out move);
             }
 
-            ReadOnlySpan<int> possibleMoves = buffer.AsSpan()[..possibleMoveCount];
-            // Randomizing the order of move candidates.
-            int lowerBound = SolverHelpers.RandomizedIndex(possibleMoves);
-            int upperBound = lowerBound + possibleMoveCount;
+            ReadOnlySpan<int> legalMoves = buffer.AsSpan()[..legalMoveCount];
+            int lowerBound = _randomizeMoveOrdering ? SolverHelpers.RandomizedIndex(legalMoves) : 0;
+            int upperBound = lowerBound + legalMoveCount;
             double bestScore = double.NegativeInfinity;
             int bestMove = -1;
             for (int i = lowerBound; i < upperBound; ++i)
             {
-                int moveCandidate = possibleMoves[i % possibleMoveCount];
+                int moveCandidate = legalMoves[i % legalMoveCount];
                 Node child = _game.MakeMoveUnchecked(_currentNode, moveCandidate);
                 double scoreCandidate = -SolverHelpers.Negamax(_game, child);
                 if (scoreCandidate > bestScore)
