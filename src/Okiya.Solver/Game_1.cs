@@ -44,10 +44,10 @@ public readonly record struct Game<TCardCollection>
                 throw new ArgumentException("Both rank and suit do not match the previous card.", nameof(move));
         }
         else if (Game.IsCentralBlock(move))
-            throw new ArgumentException("The first move cannot be to the center block.", nameof(move));
+            throw new ArgumentException("The first move cannot be to the central block.", nameof(move));
 
         if (!node.TryAddPlayerToken(move, out Node child))
-            throw new ArgumentException("The move is already done.", nameof(move));
+            throw new ArgumentException($"The move '{move}' has already been made.", nameof(move));
 
         return child;
     }
