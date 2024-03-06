@@ -79,6 +79,32 @@ internal static class Program
         table.Add(tableBody);
 
         const int columnCount = 4;
+
+        {
+            XElement tableFooter = new("thead");
+            table.Add(tableFooter);
+            XElement tr = new("tr");
+            tableFooter.Add(tr);
+            int targetColumnIndex = node.SideToMove is 0 ? 3 : 0;
+            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
+            {
+                XElement td = new("td");
+                tr.Add(td);
+                if (columnIndex != targetColumnIndex)
+                    continue;
+                if (!node.TryGetCardIndex(out int cardIndex))
+                {
+                    td.Add(new XElement("span", new XAttribute("class", "monospace unavailable"), "\u00a0\u00a0"));
+                    continue;
+                }
+
+                int card = game.GetCard(cardIndex);
+                string s = Int32CardConcept.Instance.ToString(card);
+                string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
+                td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
+            }
+        }
+
         const int rowCount = (Constants.CardCount + columnCount - 1) / columnCount;
         HashSet<int> moves = new(Constants.CardCount);
         game.PopulateLegalMoves(node, moves);
@@ -105,31 +131,6 @@ internal static class Program
                     td.Add(new XElement("span", new XAttribute("class", "monospace unavailable"), s));
                 else
                     td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
-            }
-        }
-
-        {
-            XElement tableFooter = new("tfoot");
-            table.Add(tableFooter);
-            XElement tr = new("tr");
-            tableFooter.Add(tr);
-            int targetColumnIndex = node.SideToMove is 0 ? 3 : 0;
-            for (int columnIndex = 0; columnIndex < columnCount; ++columnIndex)
-            {
-                XElement td = new("td");
-                tr.Add(td);
-                if (columnIndex != targetColumnIndex)
-                    continue;
-                if (!node.TryGetCardIndex(out int cardIndex))
-                {
-                    td.Add(new XElement("span", new XAttribute("class", "monospace unavailable"), "\u00a0\u00a0"));
-                    continue;
-                }
-
-                int card = game.GetCard(cardIndex);
-                string s = Int32CardConcept.Instance.ToString(card);
-                string suitClass = s_suitClasses[Int32CardConcept.Instance.Suit(card)];
-                td.Add(new XElement("span", new XAttribute("class", $"monospace {suitClass}"), s));
             }
         }
 

@@ -36,6 +36,6 @@ table.board {
   text-align: center;
 }
 
-table.board tfoot tr td {
-  padding-top: 1em;
+table.board thead tr td {
+  padding-bottom: 1em;
 }
